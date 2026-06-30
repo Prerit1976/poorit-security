@@ -603,14 +603,16 @@ Customer_database.sql</textarea>
 
   <!-- LAB: Password Attacks -->
   <div class="lab">
-    <h3>🔑 Lab 4 — Dictionary Attack in Action <span class="tag">WATCH IT CRACK</span></h3>
-    <p class="lab-desc">Type a password below. Watch the attacker iterate through the top 10,000 most leaked passwords. If yours is in the list — instant compromise.</p>
+    <h3>🔑 Lab 4 — Dictionary Attack in Action <span class="tag">UP TO 1M PASSWORDS</span></h3>
+    <p class="lab-desc">Type a password below. The attacker iterates a real leaked-password list. Start with the built-in ~500 most-common list, or load the <strong>real top 1 million</strong> from SecLists (rockyou-derived) for a serious test.</p>
     <div class="row">
       <input type="text" id="dictPwd" placeholder="Type a password to test (don't use a real one)" />
       <button onclick="runDictAttack()">🔓 Attack</button>
+      <button onclick="loadBigList()" id="loadBigListBtn" class="ghost">⬇ Load 1M password list (~8 MB)</button>
     </div>
+    <div id="dictListStatus" style="margin-top:8px;font-size:12px;color:var(--muted);">Currently loaded: <span id="dictListName" style="color:var(--accent);font-weight:700;">~500 most-common passwords (built-in)</span></div>
     <div class="output" id="dictOut" style="display:none;"></div>
-    <p style="margin-top:12px;font-size:13px;color:var(--muted);">Try these to see instant cracks: <code>password</code>, <code>123456</code>, <code>qwerty</code>, <code>admin</code>, <code>iloveyou</code>, <code>welcome</code>, <code>monkey</code>, <code>letmein</code>, <code>chocolate</code>, <code>princess</code>. Try a long passphrase — won't be cracked.</p>
+    <p style="margin-top:12px;font-size:13px;color:var(--muted);">Try these for instant cracks: <code>password</code>, <code>123456</code>, <code>qwerty</code>, <code>admin</code>, <code>welcome</code>, <code>test1234</code>, <code>admin123</code>, <code>p@ssw0rd</code>, <code>letmein</code>, <code>princess</code>. After loading the 1M list, try harder ones: <code>iloveyou2</code>, <code>summer2024</code>, <code>chennai123</code>. A long passphrase like <code>correct horse battery staple</code> won't be cracked.</p>
   </div>
 </section>
 
@@ -1195,44 +1197,136 @@ Customer_database.sql</textarea>
 
   // ============ Dictionary Attack ============
   // Top common passwords (subset of SecLists rockyou top)
-  const COMMON_PASSWORDS = ['123456','password','12345678','qwerty','123456789','12345','1234','111111','1234567','dragon','123123','baseball','abc123','football','monkey','letmein','696969','shadow','master','666666','qwertyuiop','123321','mustang','1234567890','michael','654321','superman','1qaz2wsx','7777777','121212','000000','qazwsx','123qwe','killer','trustno1','jordan','jennifer','zxcvbnm','asdfgh','hunter','buster','soccer','harley','batman','andrew','tigger','sunshine','iloveyou','2000','charlie','robert','thomas','hockey','ranger','daniel','starwars','klaster','112233','george','asshole','computer','michelle','jessica','pepper','1111','zxcvbn','555555','11111111','131313','freedom','777777','pass','maggie','159753','aaaaaa','ginger','princess','joshua','cheese','amanda','summer','love','ashley','6969','nicole','chelsea','biteme','matthew','access','yankees','987654321','dallas','austin','thunder','taylor','matrix','william','corvette','hello','martin','heather','secret','fucker','merlin','diamond','1234qwer','gfhjkm','hammer','silver','222222','88888888','anthony','justin','test','bailey','q1w2e3r4t5','patrick','internet','scooter','orange','11111','golfer','cookie','richard','samantha','bigdog','guitar','jackson','whatever','mickey','chicken','sparky','snoopy','maverick','phoenix','camaro','sexy','peanut','morgan','welcome','falcon','cowboy','ferrari','samsung','andrea','smokey','steelers','joseph','mercedes','dakota','arsenal','eagles','melissa','boomer','booboo','spider','nascar','monster','tigers','yellow','xxxxxx','123123123','gateway','marina','diablo','bulldog','qwer1234','compaq','purple','hardcore','banana','junior','hannah','123654','porsche','lakers','iceman','money','cowboys','987654','london','tennis','999999','ncc1701','coffee','scooby','0000','miller','boston','q1w2e3r4','fuckoff','brandon','yamaha','chester','mother','forever','johnny','edward','333333','oliver','redsox','player','nikita','knight','fender','barney','midnight','please','brandy','chicago','badboy','iwantu','slayer','rangers','charles','angel','flower','bigdaddy','rabbit','wizard','bigdick','jasper','enter','rachel','chris','steven','winner','adidas','victoria','natasha','1q2w3e4r','jasmine','winter','prince','panties','marine','ghbdtn','fishing','cocacola','casper','james','232323','raiders','888888','marlboro','gandalf','asdfasdf','crystal','87654321','12344321','sexsex','golden','blowme','bigtits','8675309','panther','lauren','angela','bitch','spanky','thx1138','angels','madison','winston','shannon','mike','toyota','blowjob','jordan23','canada','sophie','Password','apples','dick','tiger','razz','123abc','pokemon','qazxsw','55555','qwaszx','muffin','johnson','murphy','cooper','jonathan','liverpoo','david','danielle','159357','jackie','1990','123456a','789456','turtle','hello1','letmein1','tigger1','master1','passw0rd','admin','password1','passwords','qwerty1','password123','iloveyou1','admin123','root','toor','default','guest','demo','test123','12341234','wifi','wifipass','wifipassword','ssid'];
+  const COMMON_PASSWORDS = ['123456','password','12345678','qwerty','123456789','12345','1234','111111','1234567','dragon','123123','baseball','abc123','football','monkey','letmein','696969','shadow','master','666666','qwertyuiop','123321','mustang','1234567890','michael','654321','superman','1qaz2wsx','7777777','121212','000000','qazwsx','123qwe','killer','trustno1','jordan','jennifer','zxcvbnm','asdfgh','hunter','buster','soccer','harley','batman','andrew','tigger','sunshine','iloveyou','2000','charlie','robert','thomas','hockey','ranger','daniel','starwars','klaster','112233','george','asshole','computer','michelle','jessica','pepper','1111','zxcvbn','555555','11111111','131313','freedom','777777','pass','maggie','159753','aaaaaa','ginger','princess','joshua','cheese','amanda','summer','love','ashley','6969','nicole','chelsea','biteme','matthew','access','yankees','987654321','dallas','austin','thunder','taylor','matrix','william','corvette','hello','martin','heather','secret','fucker','merlin','diamond','1234qwer','gfhjkm','hammer','silver','222222','88888888','anthony','justin','test','bailey','q1w2e3r4t5','patrick','internet','scooter','orange','11111','golfer','cookie','richard','samantha','bigdog','guitar','jackson','whatever','mickey','chicken','sparky','snoopy','maverick','phoenix','camaro','sexy','peanut','morgan','welcome','falcon','cowboy','ferrari','samsung','andrea','smokey','steelers','joseph','mercedes','dakota','arsenal','eagles','melissa','boomer','booboo','spider','nascar','monster','tigers','yellow','xxxxxx','123123123','gateway','marina','diablo','bulldog','qwer1234','compaq','purple','hardcore','banana','junior','hannah','123654','porsche','lakers','iceman','money','cowboys','987654','london','tennis','999999','ncc1701','coffee','scooby','0000','miller','boston','q1w2e3r4','fuckoff','brandon','yamaha','chester','mother','forever','johnny','edward','333333','oliver','redsox','player','nikita','knight','fender','barney','midnight','please','brandy','chicago','badboy','iwantu','slayer','rangers','charles','angel','flower','bigdaddy','rabbit','wizard','bigdick','jasper','enter','rachel','chris','steven','winner','adidas','victoria','natasha','1q2w3e4r','jasmine','winter','prince','panties','marine','ghbdtn','fishing','cocacola','casper','james','232323','raiders','888888','marlboro','gandalf','asdfasdf','crystal','87654321','12344321','sexsex','golden','blowme','bigtits','8675309','panther','lauren','angela','bitch','spanky','thx1138','angels','madison','winston','shannon','mike','toyota','blowjob','jordan23','canada','sophie','Password','apples','dick','tiger','razz','123abc','pokemon','qazxsw','55555','qwaszx','muffin','johnson','murphy','cooper','jonathan','liverpoo','david','danielle','159357','jackie','1990','123456a','789456','turtle','hello1','letmein1','tigger1','master1','passw0rd','admin','password1','passwords','qwerty1','password123','iloveyou1','admin123','root','toor','default','guest','demo','test','test1','test12','test123','test1234','test12345','test123456','testing','testtest','12341234','wifi','wifipass','wifipassword','ssid','admin1','admin12','admin1234','admin12345','adminadmin','admin@123','password12','password1234','password12345','passw0rd1','p@ssw0rd','p@ssword','pa$$word','Password1','Password123','Password1234','qwerty12','qwerty123','qwerty1234','qwerty12345','qwertyqwerty','welcome1','welcome12','welcome123','welcome1234','welcome@123','hello12','hello123','hello1234','helloworld','iloveyou2','iloveyou123','letmein2','letmein123','master123','dragon123','football123','baseball123','sunshine1','sunshine123','monkey123','princess1','princess123','starwars123','pokemon123','superman1','superman123','batman123','spiderman','spiderman1','india123','india@123','mumbai','mumbai123','delhi','delhi123','chennai','chennai123','bengaluru','bangalore','bangalore123','kolkata','hyderabad','pune','jaipur','srk','srk123','salman','salmankhan','aamir','virat','viratkohli','dhoni','msdhoni','sachin','tendulkar','ipl2024','ipl2025','cricket','cricket123','priya123','rahul123','pooja123','arjun123','rohit123','amit123','suresh','ramesh','kumar','kumar123','singh','sharma','sharma123','company123','office123','office@123','support','support123','login','login123','user','user1','user123','user1234','admin2024','admin2025','password2024','password2025','summer2024','summer2025','winter2024','winter2023','spring2024','autumn2024','january1','february1','march2024','school123','college','college123','student','student1','student123','teacher','teacher123','12345678910','11223344','55667788','asdfghjkl','asdf1234','zxcv1234','qaz123','qaz@123','1q2w3e','1q2w3e4r5t','abcd1234','abcd@123','abc12345','abcdef','abcabc','aaa111','aaaa1111','111222','111222333','01012024','01012025','15081947','26011950','14081947','000000000','999999999','1234abcd','abcd@1234','user@123','admin@2024','admin@2025','password@123','password@2024','welcome@2024','welcome@2025','india@2024','india@2025','test@123','test@1234','test@2024','demo@123','support@123','login@123','company@123','office@2024'];
+
+  let extendedPasswords = null; // Set when 1M list is loaded
+  let extendedLoading = false;
+
+  async function loadBigList() {
+    if (extendedPasswords) {
+      document.getElementById('loadBigListBtn').textContent = `✓ Loaded ${extendedPasswords.length.toLocaleString()} passwords`;
+      return;
+    }
+    if (extendedLoading) return;
+    extendedLoading = true;
+    const btn = document.getElementById('loadBigListBtn');
+    btn.disabled = true;
+    btn.textContent = '⬇ Downloading...';
+
+    const url = 'https://cdn.jsdelivr.net/gh/danielmiessler/SecLists@master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt';
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+
+      const contentLength = +response.headers.get('Content-Length') || 0;
+      const reader = response.body.getReader();
+      let received = 0;
+      const chunks = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        if (contentLength) {
+          const pct = Math.round(received / contentLength * 100);
+          btn.textContent = `⬇ ${pct}%  (${(received/1024/1024).toFixed(1)} MB)`;
+        } else {
+          btn.textContent = `⬇ Downloaded ${(received/1024/1024).toFixed(1)} MB...`;
+        }
+      }
+      const blob = new Blob(chunks);
+      const text = await blob.text();
+      const passwords = text.split(/\r?\n/).map(p => p.trim()).filter(Boolean);
+      extendedPasswords = passwords;
+
+      btn.textContent = `✓ Loaded ${passwords.length.toLocaleString()} passwords`;
+      btn.style.background = 'rgba(34,197,94,0.2)';
+      btn.style.borderColor = 'var(--ok)';
+      btn.style.color = '#86efac';
+      document.getElementById('dictListName').textContent = `top ${passwords.length.toLocaleString()} from SecLists rockyou (loaded)`;
+      btn.disabled = false;
+    } catch (e) {
+      btn.textContent = '⚠ Failed: ' + e.message + ' — try again';
+      btn.disabled = false;
+      btn.style.background = 'rgba(239,68,68,0.2)';
+      btn.style.borderColor = 'var(--danger)';
+    } finally {
+      extendedLoading = false;
+    }
+  }
 
   function runDictAttack() {
-    const target = document.getElementById('dictPwd').value.toLowerCase();
+    const target = document.getElementById('dictPwd').value;
     const out = document.getElementById('dictOut');
     out.style.display = 'block';
     out.className = 'output';
-    out.innerHTML = '🔄 Starting dictionary attack on rockyou top 10,000...';
 
     if (!target) {
       out.innerHTML = '⚠ Type a password first.';
       return;
     }
 
-    let i = 0;
-    let lines = '';
-    const step = () => {
-      const batch = Math.min(15, COMMON_PASSWORDS.length - i);
-      for (let j = 0; j < batch; j++) {
-        const guess = COMMON_PASSWORDS[i + j];
-        const hit = guess === target;
-        lines += `<div style="color:${hit ? '#22c55e' : 'var(--muted)'};font-size:11px;">trying: ${guess}${hit ? '  ← ✅ MATCH FOUND!' : ''}</div>`;
-        if (hit) {
-          out.className = 'output danger';
-          out.innerHTML = `<div style="color:#fca5a5;font-weight:700;margin-bottom:8px;">🔥 PWNED in ${i + j + 1} attempts (~${((i + j + 1) / 10000000).toFixed(7)} seconds at modern speeds).</div>` + lines;
-          return;
-        }
+    // Pick the loaded list
+    const list = extendedPasswords || COMMON_PASSWORDS;
+    const listName = extendedPasswords
+      ? `top ${list.length.toLocaleString()} leaked passwords (SecLists rockyou)`
+      : `built-in ${list.length} most-common passwords`;
+
+    // O(n) lookup with case-INSENSITIVE match for built-in list, exact for big list
+    let matchIdx = -1;
+    if (extendedPasswords) {
+      // big list — exact match (case-sensitive, since leaked lists preserve case)
+      matchIdx = list.indexOf(target);
+      if (matchIdx === -1) matchIdx = list.indexOf(target.toLowerCase());
+    } else {
+      const t = target.toLowerCase();
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].toLowerCase() === t) { matchIdx = i; break; }
       }
-      i += batch;
-      out.innerHTML = `<div style="color:var(--muted);margin-bottom:8px;">Tested ${i}/${COMMON_PASSWORDS.length} — still trying...</div>` + lines.split('</div>').slice(-15).join('</div>');
-      if (i < COMMON_PASSWORDS.length) {
-        setTimeout(step, 30);
+    }
+
+    const startTime = performance.now();
+    // Decide animation step: for very long lists, leap in big chunks
+    const endIdx = matchIdx === -1 ? list.length : matchIdx + 1;
+    // Aim for ~150 visual frames regardless of list size
+    const step = Math.max(1, Math.floor(endIdx / 150));
+    let pos = 0;
+
+    function tick() {
+      const batch = Math.min(step, endIdx - pos);
+      pos += batch;
+
+      if (matchIdx !== -1 && pos >= matchIdx + 1) {
+        // FOUND
+        const elapsed = ((performance.now() - startTime) / 1000).toFixed(3);
+        const realTime = matchIdx / 1e9; // ~1B guesses/sec on GPU
+        const realTimeStr = realTime < 1e-6 ? '< 1 microsecond' :
+                            realTime < 1e-3 ? (realTime*1e6).toFixed(1) + ' microseconds' :
+                            realTime < 1 ? (realTime*1e3).toFixed(1) + ' milliseconds' :
+                            realTime.toFixed(2) + ' seconds';
+        out.className = 'output danger';
+        out.innerHTML = `<div style="color:#fca5a5;font-weight:700;font-size:15px;margin-bottom:8px;">🔥 PWNED at rank ${(matchIdx + 1).toLocaleString()} / ${list.length.toLocaleString()}</div>
+          <div style="color:var(--muted);font-size:13px;margin-bottom:6px;">List: ${listName}</div>
+          <div style="color:var(--muted);font-size:13px;margin-bottom:6px;">UI animation took ${elapsed}s · A real GPU brute-force would crack this in <strong style="color:#fca5a5;">${realTimeStr}</strong>.</div>
+          <div style="background:#000;padding:10px;border-radius:6px;margin-top:8px;color:#22c55e;font-size:13px;"><strong>Match:</strong> <code>${list[matchIdx]}</code></div>`;
+        return;
+      }
+
+      // Show progress
+      const samplePwd = list[Math.min(pos - 1, list.length - 1)] || '';
+      out.innerHTML = `<div style="color:var(--muted);margin-bottom:6px;">Testing <strong>${pos.toLocaleString()}</strong> / ${list.length.toLocaleString()} from ${listName}...</div>
+        <div style="font-family:monospace;color:var(--muted);font-size:11px;">currently trying: <code style="color:var(--accent);">${samplePwd}</code></div>`;
+
+      if (pos < endIdx) {
+        setTimeout(tick, 16);
       } else {
+        // Done — no match
         out.className = 'output ok';
-        out.innerHTML = `<div style="color:#86efac;font-weight:700;">✅ Survived the dictionary attack! All ${COMMON_PASSWORDS.length} common passwords tried — yours isn't here. Good passphrase choice.</div>`;
+        out.innerHTML = `<div style="color:#86efac;font-weight:700;font-size:15px;margin-bottom:8px;">✅ Survived — your password isn't in the ${listName}.</div>
+          <div style="color:var(--muted);font-size:13px;">${extendedPasswords ? 'This is the actual top 1 million leaked passwords. Surviving this is a strong signal — but still pair with MFA.' : 'Want a tougher test? Click "Load 1M password list" above.'}</div>`;
       }
-    };
-    step();
+    }
+    tick();
   }
 
   // ============ DDoS Visualizer ============
