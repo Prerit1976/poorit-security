@@ -905,10 +905,22 @@ Customer_database.sql</textarea>
       cell.onclick = () => infectCell(i);
       virusGrid.appendChild(cell);
     }
-    // Plant the virus in one random cell
-    const start = Math.floor(Math.random() * 64);
-    virusGrid.children[start].dataset.hasVirus = '1';
-    virusGrid.children[start].title = '(Secretly infected — click any file to find out!)';
+    // Plant viruses at fixed visible positions (row:col) — 2:2, 3:3, 4:4, 5:5
+    // Convert 1-indexed (row, col) to 0-indexed array idx: (row-1) * VIRUS_COLS + (col-1)
+    const infectedPositions = [
+      (2 - 1) * VIRUS_COLS + (2 - 1), //  9
+      (3 - 1) * VIRUS_COLS + (3 - 1), // 18
+      (4 - 1) * VIRUS_COLS + (4 - 1), // 27
+      (5 - 1) * VIRUS_COLS + (5 - 1)  // 36
+    ];
+    infectedPositions.forEach(idx => {
+      const cell = virusGrid.children[idx];
+      cell.dataset.hasVirus = '1';
+      cell.textContent = '🦠';
+      cell.style.background = 'rgba(239,68,68,0.15)';
+      cell.style.borderColor = 'rgba(239,68,68,0.5)';
+      cell.title = 'Infected file — click to "open" it and watch the virus spread!';
+    });
     updateVirusCount();
   }
   function infectCell(idx) {
