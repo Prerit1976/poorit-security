@@ -905,7 +905,7 @@ Customer_database.sql</textarea>
       cell.onclick = () => infectCell(i);
       virusGrid.appendChild(cell);
     }
-    // Plant viruses at fixed visible positions (row:col) — 2:2, 3:3, 4:4, 5:5
+    // Plant viruses at fixed positions (row:col) — 2:2, 3:3, 4:4, 5:5 — hidden until clicked
     // Convert 1-indexed (row, col) to 0-indexed array idx: (row-1) * VIRUS_COLS + (col-1)
     const infectedPositions = [
       (2 - 1) * VIRUS_COLS + (2 - 1), //  9
@@ -914,12 +914,7 @@ Customer_database.sql</textarea>
       (5 - 1) * VIRUS_COLS + (5 - 1)  // 36
     ];
     infectedPositions.forEach(idx => {
-      const cell = virusGrid.children[idx];
-      cell.dataset.hasVirus = '1';
-      cell.textContent = '🦠';
-      cell.style.background = 'rgba(239,68,68,0.15)';
-      cell.style.borderColor = 'rgba(239,68,68,0.5)';
-      cell.title = 'Infected file — click to "open" it and watch the virus spread!';
+      virusGrid.children[idx].dataset.hasVirus = '1';
     });
     updateVirusCount();
   }
@@ -929,7 +924,7 @@ Customer_database.sql</textarea>
     if (cell.dataset.hasVirus !== '1' && !anyNeighborInfected(idx)) return;
     virusState[idx] = true;
     cell.classList.add('infected');
-    cell.textContent = '☠';
+    cell.textContent = '🦠';
     updateVirusCount();
     // Spread to neighbors after delay
     setTimeout(() => {
