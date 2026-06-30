@@ -48,6 +48,13 @@
     padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
   }
   nav.top a:hover { color: var(--ink); background: rgba(255,255,255,0.05); }
+  nav.top .poorit-brand { display: inline-flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; text-decoration: none; border-radius: 8px; transition: background 0.15s; }
+  nav.top .poorit-brand:hover { background: rgba(10,141,233,0.1); }
+  nav.top .poorit-brand img { height: 32px; width: auto; display: block; }
+  nav.top .poorit-brand .poorit-text { display: flex; flex-direction: column; line-height: 1; }
+  nav.top .poorit-brand .poorit-text strong { color: #0a8de9; font-weight: 800; font-size: 14px; letter-spacing: 1.5px; }
+  nav.top .poorit-brand .poorit-text em { color: var(--muted); font-style: normal; font-size: 10px; letter-spacing: 1px; margin-top: 2px; }
+  nav.top .brand-divider { width: 1px; height: 28px; background: var(--line); display: inline-block; margin: 0 4px; }
   nav.top .day-switch {
     margin-left: auto; display: inline-flex; gap: 4px; padding: 4px;
     background: rgba(255,255,255,0.05); border-radius: 8px;
@@ -306,6 +313,12 @@
 </div>
 
 <nav class="top">
+  <a href="https://poorit.in" target="_blank" rel="noopener" class="poorit-brand" title="poorit.in — visit Poorit">
+    <img src="../assets/poorit-logo.png" alt="Poorit" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';" />
+    <span class="poorit-fallback" style="display:none;width:32px;height:32px;background:linear-gradient(135deg,#0a8de9,#0a66c2);color:#fff;border-radius:6px;align-items:center;justify-content:center;font-weight:900;font-size:18px;">P</span>
+    <span class="poorit-text"><strong>POORIT</strong><em>poorit.in</em></span>
+  </a>
+  <span class="brand-divider"></span>
   <span class="brand">🔐 CYBERSEC 101</span>
   <a href="#hunt">🕵️ Password Hunt</a>
   <a href="#cipher">🔐 Cipher Lab</a>
