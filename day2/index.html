@@ -1213,46 +1213,63 @@ Customer_database.sql</textarea>
     btn.disabled = true;
     btn.textContent = '⬇ Downloading...';
 
-    const url = 'https://cdn.jsdelivr.net/gh/danielmiessler/SecLists@master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt';
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('HTTP ' + response.status);
+    // Try mirrors in order — first one to respond wins.
+    // The SecLists folder URL on jsDelivr has a per-file size limit, so we use
+    // the xato-net file (8.5MB, top 1M) and fall back to the 100K file (~780KB)
+    // if the big one fails.
+    const urls = [
+      { url: 'https://cdn.jsdelivr.net/gh/danielmiessler/SecLists@master/Passwords/Common-Credentials/xato-net-10-million-passwords-1000000.txt', label: 'top 1,000,000' },
+      { url: 'https://cdn.jsdelivr.net/gh/danielmiessler/SecLists@master/Passwords/Common-Credentials/Pwdb_top-1000000.txt', label: 'top 1,000,000 (mirror)' },
+      { url: 'https://cdn.jsdelivr.net/gh/danielmiessler/SecLists@master/Passwords/Common-Credentials/xato-net-10-million-passwords-100000.txt', label: 'top 100,000 (fallback)' }
+    ];
 
-      const contentLength = +response.headers.get('Content-Length') || 0;
-      const reader = response.body.getReader();
-      let received = 0;
-      const chunks = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        received += value.length;
-        if (contentLength) {
-          const pct = Math.round(received / contentLength * 100);
-          btn.textContent = `⬇ ${pct}%  (${(received/1024/1024).toFixed(1)} MB)`;
-        } else {
-          btn.textContent = `⬇ Downloaded ${(received/1024/1024).toFixed(1)} MB...`;
+    let lastErr = null;
+    for (const { url, label } of urls) {
+      try {
+        btn.textContent = `⬇ Connecting to ${label}...`;
+        const response = await fetch(url);
+        if (!response.ok) { lastErr = new Error('HTTP ' + response.status); continue; }
+
+        const contentLength = +response.headers.get('Content-Length') || 0;
+        const reader = response.body.getReader();
+        let received = 0;
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (contentLength) {
+            const pct = Math.round(received / contentLength * 100);
+            btn.textContent = `⬇ ${pct}%  (${(received/1024/1024).toFixed(1)} / ${(contentLength/1024/1024).toFixed(1)} MB)`;
+          } else {
+            btn.textContent = `⬇ Downloaded ${(received/1024/1024).toFixed(1)} MB...`;
+          }
         }
-      }
-      const blob = new Blob(chunks);
-      const text = await blob.text();
-      const passwords = text.split(/\r?\n/).map(p => p.trim()).filter(Boolean);
-      extendedPasswords = passwords;
+        const blob = new Blob(chunks);
+        const text = await blob.text();
+        const passwords = text.split(/\r?\n/).map(p => p.trim()).filter(Boolean);
+        extendedPasswords = passwords;
 
-      btn.textContent = `✓ Loaded ${passwords.length.toLocaleString()} passwords`;
-      btn.style.background = 'rgba(34,197,94,0.2)';
-      btn.style.borderColor = 'var(--ok)';
-      btn.style.color = '#86efac';
-      document.getElementById('dictListName').textContent = `top ${passwords.length.toLocaleString()} from SecLists rockyou (loaded)`;
-      btn.disabled = false;
-    } catch (e) {
-      btn.textContent = '⚠ Failed: ' + e.message + ' — try again';
-      btn.disabled = false;
-      btn.style.background = 'rgba(239,68,68,0.2)';
-      btn.style.borderColor = 'var(--danger)';
-    } finally {
-      extendedLoading = false;
+        btn.textContent = `✓ Loaded ${passwords.length.toLocaleString()} passwords`;
+        btn.style.background = 'rgba(34,197,94,0.2)';
+        btn.style.borderColor = 'var(--ok)';
+        btn.style.color = '#86efac';
+        document.getElementById('dictListName').textContent = `${label} from SecLists (loaded)`;
+        btn.disabled = false;
+        extendedLoading = false;
+        return;
+      } catch (e) {
+        lastErr = e;
+        // try next mirror
+      }
     }
+    btn.textContent = '⚠ All mirrors failed — check connection and retry';
+    btn.disabled = false;
+    btn.style.background = 'rgba(239,68,68,0.2)';
+    btn.style.borderColor = 'var(--danger)';
+    if (lastErr) console.error('Password list fetch failed:', lastErr);
+    extendedLoading = false;
   }
 
   function runDictAttack() {
