@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cybersec 101 · Games — Hands-on Challenges</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-2: #11172e;
+    --panel: #161d3a;
+    --ink: #e6ecff;
+    --muted: #8e97c0;
+    --accent: #5eead4;
+    --accent-2: #f472b6;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --ok: #22c55e;
+    --line: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: radial-gradient(1200px 800px at 20% -10%, #1b2350 0%, transparent 60%),
+                radial-gradient(900px 600px at 110% 10%, #3b1248 0%, transparent 55%),
+                var(--bg);
+    color: var(--ink); line-height: 1.6; scroll-behavior: smooth;
+  }
+  #previewBanner { display:none;background:linear-gradient(90deg,#f59e0b,#f472b6);color:#0b1020;padding:10px 16px;text-align:center;font-size:13px;font-weight:600; }
+  #previewBanner a { color:#0b1020;text-decoration:underline; }
+
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(11, 16, 32, 0.75);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  nav.top .brand {
+    font-weight: 700; letter-spacing: 0.5px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  nav.top a {
+    color: var(--muted); text-decoration: none; font-size: 14px;
+    padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
+  }
+  nav.top a:hover { color: var(--ink); background: rgba(255,255,255,0.05); }
+  nav.top .day-switch {
+    margin-left: auto; display: inline-flex; gap: 4px; padding: 4px;
+    background: rgba(255,255,255,0.05); border-radius: 8px;
+  }
+  nav.top .day-switch a { padding: 4px 12px; font-size: 13px; }
+  nav.top .day-switch a.current { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b1020; font-weight: 700; }
+
+  header.hero {
+    padding: 80px 24px 60px; text-align: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .badge {
+    display: inline-block; padding: 6px 14px;
+    border: 1px solid var(--accent); border-radius: 999px;
+    color: var(--accent); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  header.hero h1 {
+    font-size: clamp(36px, 6vw, 64px); line-height: 1.1; margin: 0 0 16px;
+    background: linear-gradient(180deg, #fff 0%, #b9c2e8 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header.hero p.tag { font-size: 20px; color: var(--muted); max-width: 720px; margin: 0 auto 40px; }
+
+  section {
+    max-width: 1100px; margin: 0 auto;
+    padding: 60px 24px; border-top: 1px solid var(--line);
+  }
+  section h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 8px; }
+  section .eyebrow {
+    color: var(--accent); font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  section p.lede { color: var(--muted); font-size: 17px; max-width: 720px; margin-bottom: 24px; }
+
+  /* Story card */
+  .story {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 28px;
+    font-size: 15px; line-height: 1.8; color: #d4dcff;
+    margin: 24px 0; position: relative;
+  }
+  .story::before {
+    content: '📖 THE STORY';
+    position: absolute; top: -10px; left: 24px;
+    background: var(--bg); padding: 0 12px;
+    font-size: 11px; letter-spacing: 2px; color: var(--accent);
+  }
+  .story p { margin: 0 0 14px; }
+  .story p:last-child { margin-bottom: 0; }
+  .story strong { color: var(--accent); font-weight: 600; }
+
+  /* Challenge cards */
+  .challenge {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 20px; margin-bottom: 14px;
+  }
+  .challenge h4 { margin: 0 0 8px; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+  .challenge .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0b1020; font-weight: 700; font-size: 14px;
+  }
+  .challenge .hint { color: var(--muted); font-size: 14px; margin: 4px 0 12px; }
+  .challenge .input-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .challenge input[type="text"], .challenge input[type="number"] {
+    flex: 1; min-width: 180px; background: var(--bg-2); border: 1px solid var(--line);
+    color: var(--ink); padding: 10px 14px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  }
+  .challenge input:focus { outline: none; border-color: var(--accent); }
+  .challenge button {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: 0; color: #0b1020; font-weight: 700;
+    padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  .challenge button.ghost {
+    background: transparent; color: var(--muted); border: 1px solid var(--line);
+    font-weight: 500;
+  }
+  .challenge.solved { border-color: var(--ok); background: linear-gradient(180deg, rgba(34,197,94,0.08), var(--panel)); }
+  .challenge.failed { border-color: var(--danger); }
+  .challenge .feedback {
+    margin-top: 10px; padding: 10px 14px; border-radius: 6px;
+    font-size: 13px; display: none;
+  }
+  .challenge .feedback.show { display: block; }
+  .challenge .feedback.right { background: rgba(34,197,94,0.15); color: #86efac; border-left: 3px solid var(--ok); }
+  .challenge .feedback.wrong { background: rgba(239,68,68,0.15); color: #fca5a5; border-left: 3px solid var(--danger); }
+  .challenge .feedback.hint { background: rgba(245,158,11,0.1); color: #fcd34d; border-left: 3px solid var(--warn); }
+
+  /* Cipher tools */
+  .cipher-text {
+    background: #000; color: var(--accent); padding: 14px;
+    border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; word-break: break-all; margin: 10px 0; letter-spacing: 1px;
+  }
+  .cipher-tools {
+    background: var(--bg-2); padding: 12px; border-radius: 8px;
+    margin: 12px 0; font-size: 13px;
+  }
+  .cipher-tools .tool-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .cipher-tools input[type="range"] { flex: 1; min-width: 180px; }
+  .cipher-tools .preview {
+    margin-top: 8px; padding: 10px; background: #000; color: #fbbf24;
+    border-radius: 6px; font-family: monospace; font-size: 13px;
+    min-height: 20px; word-break: break-all;
+  }
+
+  /* PIN cracker */
+  .pin-board {
+    background: var(--bg-2); border-radius: 10px;
+    padding: 20px; margin-top: 16px;
+  }
+  .pin-input { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+  .pin-input input {
+    width: 56px; height: 64px; text-align: center;
+    font-size: 28px; font-family: 'JetBrains Mono', monospace;
+    background: var(--panel); border: 2px solid var(--line); color: var(--ink);
+    border-radius: 8px;
+  }
+  .pin-input input:focus { outline: none; border-color: var(--accent); }
+  .pin-history {
+    display: grid; gap: 8px; margin-top: 16px;
+  }
+  .pin-row {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    padding: 10px 14px; background: var(--panel); border-radius: 8px;
+    align-items: center; font-family: monospace;
+  }
+  .pin-row .digits { font-size: 18px; letter-spacing: 6px; }
+  .pin-row .feedback-emoji { font-size: 12px; color: var(--muted); }
+  .pin-row.win { background: rgba(34,197,94,0.15); border: 1px solid var(--ok); }
+  .pin-stat { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; margin: 0 4px; }
+  .pin-stat.bull { background: rgba(34,197,94,0.2); color: #86efac; }
+  .pin-stat.cow { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+  /* Progress */
+  .progress {
+    display: flex; gap: 8px; justify-content: center;
+    margin: 16px 0; flex-wrap: wrap;
+  }
+  .progress .dot {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--bg-2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .progress .dot.done { background: var(--ok); color: #fff; border-color: var(--ok); }
+  .progress .dot.failed { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+  /* Footer */
+  footer {
+    padding: 40px 24px; text-align: center; color: var(--muted);
+    font-size: 13px; border-top: 1px solid var(--line); margin-top: 60px;
+  }
+  footer .heart { color: var(--accent-2); }
+
+  /* Link modal */
+  #linkModal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:20px; }
+  #linkModal > div { background:#161d3a;border:1px solid rgba(255,255,255,0.15);border-radius:14px;max-width:500px;width:100%;padding:28px; }
+
+  .winner-banner {
+    text-align: center; padding: 24px;
+    background: linear-gradient(135deg, rgba(94,234,212,0.15), rgba(244,114,182,0.15));
+    border: 1px solid var(--accent); border-radius: 12px;
+    margin-top: 24px; display: none;
+  }
+  .winner-banner.show { display: block; }
+  .winner-banner h3 { margin: 0 0 8px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="previewBanner">
+  ⚠ Sandboxed preview detected — external links may not open here. <a id="openExternal" href="#">Open in your browser</a>.
+</div>
+
+<div id="linkModal">
+  <div>
+    <h3 style="margin:0 0 8px;color:#5eead4;">Sandbox blocked this link</h3>
+    <p style="color:#8e97c0;font-size:14px;margin:0 0 16px;">Copy the URL or open it in your browser:</p>
+    <div id="linkModalUrl" style="background:#0b1020;padding:14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5eead4;word-break:break-all;margin-bottom:16px;border:1px solid rgba(94,234,212,0.3);"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="linkModalCopy" style="flex:1;background:linear-gradient(135deg,#5eead4,#f472b6);border:0;color:#0b1020;font-weight:700;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;">📋 Copy URL</button>
+      <a id="linkModalOpen" href="#" target="_blank" rel="noopener" style="flex:1;text-align:center;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#e6ecff;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;text-decoration:none;">↗ Try opening</a>
+      <button id="linkModalClose" style="flex:0 0 auto;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#8e97c0;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;">Close</button>
+    </div>
+    <div id="linkModalToast" style="display:none;margin-top:12px;padding:8px 12px;background:rgba(34,197,94,0.15);color:#86efac;border-radius:6px;font-size:13px;text-align:center;">✓ Copied to clipboard</div>
+  </div>
+</div>
+
+<nav class="top">
+  <span class="brand">🔐 CYBERSEC 101</span>
+  <a href="#hunt">🕵️ Password Hunt</a>
+  <a href="#cipher">🔐 Cipher Lab</a>
+  <a href="#pin">🎯 PIN Cracker</a>
+  <div class="day-switch">
+    <a href="../">Day 1</a>
+    <a href="../day2/">Day 2</a>
+    <a class="current" href="#">🎮 Games</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <span class="badge">🎮 Interactive Challenges</span>
+  <h1>Think Like an Attacker</h1>
+  <p class="tag">Three hands-on games to put what you've learned into practice. Read clues, crack codes, guess PINs — all in your browser.</p>
+</header>
+
+<!-- ============ GAME 1: PASSWORD HUNT ============ -->
+<section id="hunt">
+  <div class="eyebrow">Game 1</div>
+  <h2>🕵️ Password Hunt — OSINT Challenge</h2>
+  <p class="lede">Meet Priya. She uses passwords tied to her life — like most people. Read her story carefully, then guess her 5 passwords using the hints. <strong>This is exactly how real attackers profile targets.</strong></p>
+
+  <div class="story">
+    <p>Priya Sharma woke at 6:30 AM in her Bengaluru apartment, where she had lived since moving from Pune in 2019. Today was her 29th birthday — <strong>September 14, 1996</strong> was etched into every official form she had ever filled. She made her morning filter coffee while her tabby cat, <strong>Mango</strong>, demanded breakfast with a chorus of complaints. Mango had been her constant companion for exactly <strong>7 years</strong>, ever since she adopted him from a shelter in 2018.</p>
+
+    <p>As a marketing manager at a fintech startup called CashFlow, Priya was constantly on her phone. Her preferred password manager held over 200 accounts — but she still had a few "easy" ones she remembered manually. The one for her Netflix account, which she shared with her partner Karan, was based on their favourite restaurant in Bengaluru: a small dosa place called <strong>Vidyarthi Bhavan</strong>. Their first date there in 2021 was a treasured memory.</p>
+
+    <p>Her car, a 2023 silver Maruti Swift, was nicknamed "Bullet" by her dad — a joke since it was anything but fast. The car's number plate was <strong>KA-03-MH-7842</strong>, and she used the last four digits as the PIN for almost everything: her debit card, her gym locker, even her phone unlock code. Her dad always teased her: "Priya, that's too easy to guess!"</p>
+
+    <p>She had been to twelve different countries — her travel goal was 30 by age 35. Her favourite was Japan, which she visited in 2022 and tattooed a small cherry blossom on her wrist to commemorate. On Instagram, where she had 12,400 followers, her handle was <strong>@priyas_lens</strong> — combining her name with her love of photography.</p>
+
+    <p>Yesterday, she received an email warning that her accounts may be compromised. Today, she would find out why.</p>
+  </div>
+
+  <div class="progress" id="huntProgress"></div>
+
+  <div id="huntChallenges">
+    <div class="challenge" data-answer="vidyarthibhavan" data-alt="vidyarthi bhavan|vidyarthi_bhavan|vidyarthi-bhavan" data-hint="Look at paragraph 2 — the restaurant name. Lowercase, no spaces.">
+      <h4><span class="num">1</span> Netflix password</h4>
+      <div class="hint">💡 Based on the restaurant where Priya and Karan had their first date. Just the name, lowercase, no spaces.</div>
+      <div class="input-row">
+        <input type="text" placeholder="your guess..." />
+        <button onclick="checkHunt(this, 1)">Check</button>
+        <button class="ghost" onclick="hintHunt(this)">Need a hint?</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="challenge" data-answer="7842" data-hint="Look at paragraph 3 — her car number plate. The last 4 digits.">
+      <h4><span class="num">2</span> Debit card PIN</h4>
+      <div class="hint">💡 She uses the same 4-digit PIN for everything — it's the last 4 digits of her car number plate.</div>
+      <div class="input-row">
+        <input type="text" placeholder="4-digit PIN..." maxlength="4" />
+        <button onclick="checkHunt(this, 2)">Check</button>
+        <button class="ghost" onclick="hintHunt(this)">Need a hint?</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="challenge" data-answer="14091996" data-alt="14/09/1996|14-09-1996|14.09.1996" data-hint="Her DOB is in paragraph 1: September 14, 1996. Format as DDMMYYYY = 14091996.">
+      <h4><span class="num">3</span> Banking app password (DDMMYYYY)</h4>
+      <div class="hint">💡 Her date of birth in DDMMYYYY format (no separators).</div>
+      <div class="input-row">
+        <input type="text" placeholder="8 digits..." maxlength="10" />
+        <button onclick="checkHunt(this, 3)">Check</button>
+        <button class="ghost" onclick="hintHunt(this)">Need a hint?</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="challenge" data-answer="mango7" data-alt="Mango7|MANGO7" data-hint="Pet's name (Mango) + pet's age (7 years). Glued together: mango7.">
+      <h4><span class="num">4</span> Email password</h4>
+      <div class="hint">💡 Her pet's name + her pet's age. Joined together, lowercase. (Hint: paragraph 1 has both facts.)</div>
+      <div class="input-row">
+        <input type="text" placeholder="name+age..." />
+        <button onclick="checkHunt(this, 4)">Check</button>
+        <button class="ghost" onclick="hintHunt(this)">Need a hint?</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <div class="challenge" data-answer="priyas_lens" data-alt="@priyas_lens|priyaslens" data-hint="Look at paragraph 4 — her Instagram handle (just the part after @).">
+      <h4><span class="num">5</span> Instagram password (she reused the handle!)</h4>
+      <div class="hint">💡 People often reuse their username as a password. Her Instagram handle (without the @ symbol).</div>
+      <div class="input-row">
+        <input type="text" placeholder="instagram handle..." />
+        <button onclick="checkHunt(this, 5)">Check</button>
+        <button class="ghost" onclick="hintHunt(this)">Need a hint?</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+  </div>
+
+  <div class="winner-banner" id="huntWinner">
+    <h3>🏆 All 5 cracked!</h3>
+    <p>This is exactly what attackers do — gather public info, then guess passwords. <strong>The lesson:</strong> never base passwords on anything publicly knowable about you. Use a password manager with random strings.</p>
+  </div>
+</section>
+
+<!-- ============ GAME 2: CIPHER LAB ============ -->
+<section id="cipher">
+  <div class="eyebrow">Game 2</div>
+  <h2>🔐 Cipher Lab — Crack the Codes</h2>
+  <p class="lede">Four secret messages, four different ciphers. Use the tools provided to decode each. From Caesar (2,000 years old) to Base64 (used everywhere on the modern web).</p>
+
+  <div class="progress" id="cipherProgress"></div>
+
+  <div id="cipherChallenges">
+    <!-- Cipher 1: Caesar -->
+    <div class="challenge" data-answer="welcome to cyber 101" data-alt="welcome to cyber101|welcometocyber101">
+      <h4><span class="num">1</span> Caesar Cipher</h4>
+      <div class="hint">💡 Each letter has been shifted forward by the same amount in the alphabet. Try the slider below.</div>
+      <div class="cipher-text">ZHOFRPH WR FBEHU 101</div>
+      <div class="cipher-tools">
+        <div>🔧 Shift slider — drag to try different shifts (1–25):</div>
+        <div class="tool-row">
+          <input type="range" min="1" max="25" value="1" id="caesarSlider" oninput="caesarPreview()" />
+          <span id="caesarShiftVal" style="font-family:monospace;color:var(--accent);font-weight:700;">1</span>
+        </div>
+        <div class="preview" id="caesarPreview">decoded preview will appear here…</div>
+      </div>
+      <div class="input-row">
+        <input type="text" placeholder="type the decoded message..." />
+        <button onclick="checkCipher(this, 1)">Submit Decoded Text</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Cipher 2: ROT13 -->
+    <div class="challenge" data-answer="the secret is open source" data-alt="thesecretisopensource">
+      <h4><span class="num">2</span> ROT13</h4>
+      <div class="hint">💡 A special case of Caesar — every letter shifted by exactly 13. Applying ROT13 twice gives back the original (it's its own inverse). One click does it.</div>
+      <div class="cipher-text">Gur frperg vf bcra fbhepr</div>
+      <div class="cipher-tools">
+        <div>🔧 ROT13 decoder:</div>
+        <div class="tool-row">
+          <button class="ghost" onclick="rot13Apply()">Apply ROT13</button>
+        </div>
+        <div class="preview" id="rot13Preview">decoded preview will appear here…</div>
+      </div>
+      <div class="input-row">
+        <input type="text" placeholder="type the decoded message..." />
+        <button onclick="checkCipher(this, 2)">Submit</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Cipher 3: Base64 -->
+    <div class="challenge" data-answer="the flag is password_weak" data-alt="theflagispassword_weak|the flag is PASSWORD_WEAK">
+      <h4><span class="num">3</span> Base64</h4>
+      <div class="hint">💡 An encoding (not encryption!) used everywhere on the web. Tell-tale sign: ends with one or more <code>=</code> as padding, uses A-Z, a-z, 0-9, +, /.</div>
+      <div class="cipher-text">VGhlIGZsYWcgaXMgUEFTU1dPUkRfV0VBSw==</div>
+      <div class="cipher-tools">
+        <div>🔧 Base64 decoder:</div>
+        <div class="tool-row">
+          <button class="ghost" onclick="base64Apply()">Decode Base64</button>
+        </div>
+        <div class="preview" id="base64Preview">decoded preview will appear here…</div>
+      </div>
+      <div class="input-row">
+        <input type="text" placeholder="type the decoded message..." />
+        <button onclick="checkCipher(this, 3)">Submit</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+
+    <!-- Cipher 4: Hex ASCII -->
+    <div class="challenge" data-answer="cybersec" data-alt="CYBERSEC|CyberSec">
+      <h4><span class="num">4</span> Hexadecimal ASCII</h4>
+      <div class="hint">💡 Each pair of hex digits represents one ASCII character. Hex 41 = 'A', 42 = 'B', etc. Spaces are just for readability.</div>
+      <div class="cipher-text">63 79 62 65 72 73 65 63</div>
+      <div class="cipher-tools">
+        <div>🔧 Hex → ASCII converter:</div>
+        <div class="tool-row">
+          <button class="ghost" onclick="hexApply()">Convert Hex to Text</button>
+        </div>
+        <div class="preview" id="hexPreview">decoded preview will appear here…</div>
+      </div>
+      <div class="input-row">
+        <input type="text" placeholder="type the decoded message..." />
+        <button onclick="checkCipher(this, 4)">Submit</button>
+      </div>
+      <div class="feedback"></div>
+    </div>
+  </div>
+
+  <div class="winner-banner" id="cipherWinner">
+    <h3>🏆 All 4 ciphers cracked!</h3>
+    <p>These are <em>historical</em> ciphers. Modern crypto (AES-256, RSA-2048, ECDSA) is unbreakable by brute force in the lifetime of the universe — until quantum computers arrive. Then it's all up for grabs again.</p>
+  </div>
+</section>
+
+<!-- ============ GAME 3: PIN CRACKER ============ -->
+<section id="pin">
+  <div class="eyebrow">Game 3</div>
+  <h2>🎯 PIN Cracker — Mastermind Style</h2>
+  <p class="lede">A 4-digit PIN, all unique digits. You have <strong>8 attempts</strong>. After each guess, you'll see how many digits are <strong>🎯 in the correct position</strong> and how many are <strong>🔄 correct but misplaced</strong>. Think systematically!</p>
+
+  <div class="pin-board">
+    <div style="text-align:center;color:var(--muted);font-size:13px;">Enter 4 different digits (0-9):</div>
+    <div class="pin-input">
+      <input type="text" inputmode="numeric" maxlength="1" id="d1" onkeyup="pinNav(event, 0)" />
+      <input type="text" inputmode="numeric" maxlength="1" id="d2" onkeyup="pinNav(event, 1)" />
+      <input type="text" inputmode="numeric" maxlength="1" id="d3" onkeyup="pinNav(event, 2)" />
+      <input type="text" inputmode="numeric" maxlength="1" id="d4" onkeyup="pinNav(event, 3)" />
+    </div>
+    <div style="text-align:center;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="submitPin()">🎯 Submit Guess</button>
+      <button onclick="resetPin()" class="ghost">🔄 New Game</button>
+    </div>
+    <div style="text-align:center;color:var(--muted);font-size:13px;margin-top:12px;">
+      Attempts left: <span id="pinAttempts" style="color:var(--accent);font-weight:700;">8</span>
+    </div>
+
+    <div class="pin-history" id="pinHistory"></div>
+
+    <div class="winner-banner" id="pinWinner">
+      <h3 id="pinWinTitle">🏆 Cracked it!</h3>
+      <p id="pinWinMsg"></p>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;padding:16px;background:var(--panel);border-radius:10px;border-left:3px solid var(--warn);font-size:14px;color:var(--muted);">
+    <strong style="color:var(--ink);">How attackers actually do this:</strong> A 4-digit PIN has only 10,000 possibilities. A computer tries all of them in under a second. The only thing protecting your debit card is <strong>rate limiting</strong> — the bank blocks the card after 3 wrong guesses. Without that, brute-force is trivial.
+  </div>
+</section>
+
+<footer>
+  Games for engineering students · Cybersec 101 · made with <span class="heart">♥</span>
+  <br>
+  <span style="font-size:12px;opacity:0.6;">If you cracked all 3 — you're ready for a real CTF. Try picoCTF or TryHackMe.</span>
+</footer>
+
+<script>
+  // ============ Sandbox detection + link fallback ============
+  (function() {
+    let inIframe = false;
+    try { inIframe = window.self !== window.top; } catch (e) { inIframe = true; }
+    const banner = document.getElementById('previewBanner');
+    const openLink = document.getElementById('openExternal');
+    if (openLink) openLink.href = window.location.href;
+    if (inIframe && banner) banner.style.display = 'block';
+
+    const modal = document.getElementById('linkModal');
+    const modalUrl = document.getElementById('linkModalUrl');
+    const modalOpen = document.getElementById('linkModalOpen');
+    const modalCopy = document.getElementById('linkModalCopy');
+    const modalClose = document.getElementById('linkModalClose');
+    const modalToast = document.getElementById('linkModalToast');
+
+    function showModal(url) {
+      modalUrl.textContent = url; modalOpen.href = url;
+      modalToast.style.display = 'none'; modal.style.display = 'flex';
+    }
+    function hideModal() { modal.style.display = 'none'; }
+    modalClose.addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+
+    modalCopy.addEventListener('click', async () => {
+      const url = modalUrl.textContent;
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url); copied = true;
+        }
+      } catch (e) {}
+      if (!copied) {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); copied = true; } catch (e) {}
+        document.body.removeChild(ta);
+      }
+      modalToast.textContent = copied ? '✓ Copied to clipboard' : '⚠ Copy blocked — select and copy manually';
+      modalToast.style.background = copied ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+      modalToast.style.color = copied ? '#86efac' : '#fca5a5';
+      modalToast.style.display = 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+      let isExternal = false;
+      try {
+        const url = new URL(href, window.location.href);
+        isExternal = url.origin !== window.location.origin;
+      } catch (err) { return; }
+      if (!isExternal || !inIframe) return;
+      e.preventDefault();
+      let popup = null;
+      try { popup = window.open(href, '_blank', 'noopener,noreferrer'); } catch (err) {}
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') showModal(a.href);
+    }, true);
+  })();
+
+  // ============ Helpers ============
+  function norm(s) { return (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' '); }
+
+  function renderProgress(containerId, total, solvedIdxs, failedIdxs) {
+    const c = document.getElementById(containerId);
+    c.innerHTML = '';
+    for (let i = 1; i <= total; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (solvedIdxs.has(i) ? ' done' : '') + (failedIdxs.has(i) ? ' failed' : '');
+      dot.textContent = solvedIdxs.has(i) ? '✓' : i;
+      c.appendChild(dot);
+    }
+  }
+
+  // ============ GAME 1: Password Hunt ============
+  const huntSolved = new Set();
+  const huntFailed = new Set();
+  renderProgress('huntProgress', 5, huntSolved, huntFailed);
+
+  function checkHunt(btn, n) {
+    const challenge = btn.closest('.challenge');
+    const input = challenge.querySelector('input[type="text"]');
+    const feedback = challenge.querySelector('.feedback');
+    const answer = norm(challenge.dataset.answer);
+    const alts = (challenge.dataset.alt || '').split('|').map(norm).filter(Boolean);
+    const guess = norm(input.value);
+
+    if (!guess) {
+      feedback.className = 'feedback show hint';
+      feedback.textContent = '⚠ Type something first!';
+      return;
+    }
+
+    if (guess === answer || alts.includes(guess)) {
+      challenge.classList.add('solved');
+      feedback.className = 'feedback show right';
+      feedback.innerHTML = `✅ <strong>Correct!</strong> ${challenge.dataset.hint || ''}`;
+      huntSolved.add(n); huntFailed.delete(n);
+      renderProgress('huntProgress', 5, huntSolved, huntFailed);
+      if (huntSolved.size === 5) document.getElementById('huntWinner').classList.add('show');
+    } else {
+      feedback.className = 'feedback show wrong';
+      feedback.textContent = `❌ Not quite. Try again — re-read the story carefully.`;
+      huntFailed.add(n);
+      renderProgress('huntProgress', 5, huntSolved, huntFailed);
+    }
+  }
+
+  function hintHunt(btn) {
+    const challenge = btn.closest('.challenge');
+    const feedback = challenge.querySelector('.feedback');
+    feedback.className = 'feedback show hint';
+    feedback.innerHTML = `💡 <strong>Bigger hint:</strong> ${challenge.dataset.hint}`;
+  }
+
+  // ============ GAME 2: Cipher Lab ============
+  const CAESAR_TEXT = 'ZHOFRPH WR FBEHU 101';
+  const ROT13_TEXT = 'Gur frperg vf bcra fbhepr';
+  const BASE64_TEXT = 'VGhlIGZsYWcgaXMgUEFTU1dPUkRfV0VBSw==';
+  const HEX_TEXT = '63 79 62 65 72 73 65 63';
+
+  function caesarShift(text, shift) {
+    return text.replace(/[a-zA-Z]/g, c => {
+      const base = c <= 'Z' ? 65 : 97;
+      return String.fromCharCode((c.charCodeAt(0) - base - shift + 26) % 26 + base);
+    });
+  }
+
+  function caesarPreview() {
+    const s = parseInt(document.getElementById('caesarSlider').value, 10);
+    document.getElementById('caesarShiftVal').textContent = s;
+    document.getElementById('caesarPreview').textContent = caesarShift(CAESAR_TEXT, s);
+  }
+  caesarPreview();
+
+  function rot13Apply() {
+    document.getElementById('rot13Preview').textContent = caesarShift(ROT13_TEXT, 13);
+  }
+
+  function base64Apply() {
+    try {
+      document.getElementById('base64Preview').textContent = atob(BASE64_TEXT);
+    } catch (e) {
+      document.getElementById('base64Preview').textContent = 'Decode error';
+    }
+  }
+
+  function hexApply() {
+    const hex = HEX_TEXT.replace(/\s+/g, '');
+    let s = '';
+    for (let i = 0; i < hex.length; i += 2) {
+      s += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    }
+    document.getElementById('hexPreview').textContent = s;
+  }
+
+  const cipherSolved = new Set();
+  const cipherFailed = new Set();
+  renderProgress('cipherProgress', 4, cipherSolved, cipherFailed);
+
+  function checkCipher(btn, n) {
+    const challenge = btn.closest('.challenge');
+    const input = challenge.querySelector('input[type="text"]');
+    const feedback = challenge.querySelector('.feedback');
+    const answer = norm(challenge.dataset.answer);
+    const alts = (challenge.dataset.alt || '').split('|').map(norm).filter(Boolean);
+    const guess = norm(input.value);
+
+    if (!guess) {
+      feedback.className = 'feedback show hint';
+      feedback.textContent = '⚠ Type your decoded text first!';
+      return;
+    }
+
+    if (guess === answer || alts.includes(guess)) {
+      challenge.classList.add('solved');
+      feedback.className = 'feedback show right';
+      const explanations = {
+        1: '✅ <strong>Cracked!</strong> The shift was <strong>+23</strong> (equivalent to -3). Caesar used a +3 shift in his military despatches.',
+        2: '✅ <strong>Cracked!</strong> ROT13 is its own inverse — apply it twice, get the original.',
+        3: '✅ <strong>Cracked!</strong> Base64 is encoding, NOT encryption. Anyone with a decoder can read it. Never use it to protect secrets.',
+        4: '✅ <strong>Cracked!</strong> Hex ASCII is how raw bytes get printed. 63=c, 79=y, 62=b, 65=e, 72=r, 73=s, 65=e, 63=c → "cybersec".'
+      };
+      feedback.innerHTML = explanations[n];
+      cipherSolved.add(n); cipherFailed.delete(n);
+      renderProgress('cipherProgress', 4, cipherSolved, cipherFailed);
+      if (cipherSolved.size === 4) document.getElementById('cipherWinner').classList.add('show');
+    } else {
+      feedback.className = 'feedback show wrong';
+      feedback.textContent = '❌ Not quite — use the tool to preview, then type what it shows.';
+      cipherFailed.add(n);
+      renderProgress('cipherProgress', 4, cipherSolved, cipherFailed);
+    }
+  }
+
+  // ============ GAME 3: PIN Cracker ============
+  let pinSecret = '';
+  let pinTries = 0;
+  const PIN_MAX_TRIES = 8;
+
+  function resetPin() {
+    // Generate a 4-digit PIN with all unique digits
+    const digits = '0123456789'.split('');
+    for (let i = digits.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [digits[i], digits[j]] = [digits[j], digits[i]];
+    }
+    pinSecret = digits.slice(0, 4).join('');
+    pinTries = 0;
+    document.getElementById('pinAttempts').textContent = PIN_MAX_TRIES;
+    document.getElementById('pinHistory').innerHTML = '';
+    document.getElementById('pinWinner').classList.remove('show');
+    ['d1','d2','d3','d4'].forEach(id => { document.getElementById(id).value = ''; document.getElementById(id).disabled = false; });
+    document.getElementById('d1').focus();
+  }
+
+  function pinNav(event, idx) {
+    const ids = ['d1','d2','d3','d4'];
+    const el = document.getElementById(ids[idx]);
+    el.value = el.value.replace(/[^0-9]/g, '');
+    if (event.key === 'Backspace' && !el.value && idx > 0) {
+      document.getElementById(ids[idx - 1]).focus();
+    } else if (el.value && idx < 3) {
+      document.getElementById(ids[idx + 1]).focus();
+    } else if (event.key === 'Enter') {
+      submitPin();
+    }
+  }
+
+  function submitPin() {
+    const guess = ['d1','d2','d3','d4'].map(id => document.getElementById(id).value).join('');
+    if (guess.length !== 4) {
+      alert('Enter all 4 digits.');
+      return;
+    }
+    // Allow repeated digits in user guess (we'll just count correctly)
+    pinTries++;
+    document.getElementById('pinAttempts').textContent = PIN_MAX_TRIES - pinTries;
+
+    // Compute bulls (correct position) and cows (correct digit wrong position)
+    let bulls = 0;
+    const secretArr = pinSecret.split('');
+    const guessArr = guess.split('');
+    const secretMatched = [false, false, false, false];
+    const guessMatched = [false, false, false, false];
+    for (let i = 0; i < 4; i++) {
+      if (guessArr[i] === secretArr[i]) {
+        bulls++;
+        secretMatched[i] = true;
+        guessMatched[i] = true;
+      }
+    }
+    let cows = 0;
+    for (let i = 0; i < 4; i++) {
+      if (guessMatched[i]) continue;
+      for (let j = 0; j < 4; j++) {
+        if (!secretMatched[j] && guessArr[i] === secretArr[j]) {
+          cows++;
+          secretMatched[j] = true;
+          break;
+        }
+      }
+    }
+
+    // Add to history
+    const hist = document.getElementById('pinHistory');
+    const row = document.createElement('div');
+    row.className = 'pin-row' + (bulls === 4 ? ' win' : '');
+    row.innerHTML = `
+      <div style="color:var(--muted);font-size:12px;">#${pinTries}</div>
+      <div class="digits">${guessArr.join(' ')}</div>
+      <div>
+        <span class="pin-stat bull">🎯 ${bulls}</span>
+        <span class="pin-stat cow">🔄 ${cows}</span>
+      </div>`;
+    hist.appendChild(row);
+
+    // Clear input
+    ['d1','d2','d3','d4'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('d1').focus();
+
+    // Check win/lose
+    if (bulls === 4) {
+      const w = document.getElementById('pinWinner');
+      w.classList.add('show');
+      document.getElementById('pinWinTitle').textContent = `🏆 Cracked in ${pinTries} attempt${pinTries === 1 ? '' : 's'}!`;
+      document.getElementById('pinWinMsg').innerHTML = `Computers do this in microseconds. Your debit card's only defense is the bank blocking it after 3 wrong tries. <strong>Always enable rate limiting on your APIs.</strong>`;
+      ['d1','d2','d3','d4'].forEach(id => { document.getElementById(id).disabled = true; });
+    } else if (pinTries >= PIN_MAX_TRIES) {
+      const w = document.getElementById('pinWinner');
+      w.classList.add('show');
+      document.getElementById('pinWinTitle').textContent = `💀 Out of attempts`;
+      document.getElementById('pinWinMsg').innerHTML = `The PIN was <strong style="color:var(--accent);font-family:monospace;">${pinSecret}</strong>. Click "New Game" to try again.`;
+      ['d1','d2','d3','d4'].forEach(id => { document.getElementById(id).disabled = true; });
+    }
+  }
+
+  resetPin();
+</script>
+
+</body>
+</html>
