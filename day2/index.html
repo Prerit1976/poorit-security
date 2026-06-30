@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cybersec 101 · Day 2 — Understanding Hacker Attacks</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg-2: #11172e;
+    --panel: #161d3a;
+    --ink: #e6ecff;
+    --muted: #8e97c0;
+    --accent: #5eead4;
+    --accent-2: #f472b6;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --ok: #22c55e;
+    --line: rgba(255,255,255,0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: radial-gradient(1200px 800px at 20% -10%, #1b2350 0%, transparent 60%),
+                radial-gradient(900px 600px at 110% 10%, #3b1248 0%, transparent 55%),
+                var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    scroll-behavior: smooth;
+  }
+
+  /* Banner */
+  #previewBanner { display:none;background:linear-gradient(90deg,#f59e0b,#f472b6);color:#0b1020;padding:10px 16px;text-align:center;font-size:13px;font-weight:600; }
+  #previewBanner a { color:#0b1020;text-decoration:underline; }
+
+  /* Nav */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(11, 16, 32, 0.75);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  nav.top .brand {
+    font-weight: 700; letter-spacing: 0.5px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  nav.top a {
+    color: var(--muted); text-decoration: none; font-size: 14px;
+    padding: 6px 10px; border-radius: 6px; transition: all 0.15s;
+  }
+  nav.top a:hover, nav.top a.active { color: var(--ink); background: rgba(255,255,255,0.05); }
+  nav.top .day-switch {
+    margin-left: auto;
+    display: inline-flex; gap: 4px; padding: 4px;
+    background: rgba(255,255,255,0.05); border-radius: 8px;
+  }
+  nav.top .day-switch a { padding: 4px 12px; font-size: 13px; }
+  nav.top .day-switch a.current { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b1020; font-weight: 700; }
+
+  /* Hero */
+  header.hero {
+    padding: 80px 24px 60px; text-align: center;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .badge {
+    display: inline-block; padding: 6px 14px;
+    border: 1px solid var(--accent-2); border-radius: 999px;
+    color: var(--accent-2); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  header.hero h1 {
+    font-size: clamp(36px, 6vw, 64px); line-height: 1.1; margin: 0 0 16px;
+    background: linear-gradient(180deg, #fff 0%, #b9c2e8 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header.hero p.tag { font-size: 20px; color: var(--muted); max-width: 720px; margin: 0 auto 40px; }
+
+  /* Schedule strip */
+  .schedule {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; max-width: 1100px; margin: 0 auto 40px; padding: 0 24px;
+  }
+  .slot {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 14px 16px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .slot:hover { transform: translateY(-2px); border-color: var(--accent-2); }
+  .slot .time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--accent-2); letter-spacing: 0.5px;
+  }
+  .slot .title { font-weight: 600; font-size: 14px; margin-top: 4px; }
+
+  /* Sections */
+  section {
+    max-width: 1100px; margin: 0 auto;
+    padding: 80px 24px; border-top: 1px solid var(--line);
+  }
+  section h2 { font-size: clamp(28px, 4vw, 44px); margin: 0 0 8px; }
+  section .eyebrow {
+    color: var(--accent-2); font-size: 14px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  section p.lede { color: var(--muted); font-size: 18px; max-width: 720px; margin-bottom: 32px; }
+
+  /* Cards */
+  .grid {
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 24px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--accent-2); }
+  .card .icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 16px; color: #0b1020;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* Lab boxes (same as Day 1) */
+  .lab {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 28px; margin-top: 24px;
+  }
+  .lab h3 { margin-top: 0; display: flex; align-items: center; gap: 10px; }
+  .lab h3 .tag {
+    font-size: 10px; padding: 3px 8px; border-radius: 999px;
+    background: rgba(244,114,182,0.15); color: var(--accent-2);
+    border: 1px solid rgba(244,114,182,0.3); letter-spacing: 1px;
+  }
+  .lab .lab-desc { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  .lab textarea, .lab input[type="text"], .lab input[type="password"], .lab input[type="number"], .lab input[type="email"] {
+    width: 100%; background: var(--bg-2); border: 1px solid var(--line);
+    color: var(--ink); padding: 12px 14px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 14px; resize: vertical;
+  }
+  .lab textarea:focus, .lab input:focus { outline: none; border-color: var(--accent); }
+  .lab button {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border: 0; color: #0b1020; font-weight: 700;
+    padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  .lab button.ghost {
+    background: transparent; color: var(--ink); border: 1px solid var(--line);
+  }
+  .lab button.danger {
+    background: linear-gradient(135deg, var(--danger), #f97316); color: #fff;
+  }
+  .lab .output {
+    margin-top: 16px; padding: 16px; background: var(--bg-2);
+    border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; word-break: break-word; border-left: 3px solid var(--accent);
+  }
+  .lab .output.danger { border-left-color: var(--danger); }
+  .lab .output.ok { border-left-color: var(--ok); }
+  .lab .output.warn { border-left-color: var(--warn); }
+  .lab .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  /* Quiz */
+  .quiz { margin-top: 24px; }
+  .question { margin-bottom: 28px; padding: 20px; background: var(--panel); border-radius: 12px; border: 1px solid var(--line); }
+  .question p.q { font-weight: 600; font-size: 16px; margin: 0 0 12px; }
+  .options { display: grid; gap: 8px; }
+  .options label {
+    display: block; padding: 12px 16px; background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
+    transition: all 0.15s; font-size: 14px;
+  }
+  .options label:hover { border-color: var(--accent); background: rgba(94,234,212,0.05); }
+  .options input { margin-right: 10px; accent-color: var(--accent); }
+  .options label.correct { border-color: var(--ok); background: rgba(34,197,94,0.1); }
+  .options label.wrong { border-color: var(--danger); background: rgba(239,68,68,0.1); }
+  .explanation { margin-top: 10px; padding: 12px; background: rgba(94,234,212,0.05); border-left: 3px solid var(--accent); border-radius: 4px; font-size: 13px; color: var(--muted); display: none; }
+  .explanation.show { display: block; }
+
+  /* Malware Zoo */
+  .zoo-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .zoo-tabs button {
+    background: var(--bg-2); border: 1px solid var(--line); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+  }
+  .zoo-tabs button.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0b1020; font-weight: 700; border-color: transparent;
+  }
+  .zoo-panel { display: none; }
+  .zoo-panel.active { display: block; }
+
+  /* Virus file grid */
+  .file-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px;
+    margin: 16px 0;
+  }
+  .file-cell {
+    aspect-ratio: 1; background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; transition: all 0.3s;
+  }
+  .file-cell.infected { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; border-color: transparent; transform: scale(0.95); }
+
+  /* Worm network */
+  .network-canvas { width: 100%; height: 280px; background: var(--bg-2); border-radius: 8px; }
+
+  /* Ransomware */
+  .ransom-note {
+    background: #1a0a0a; border: 2px solid #ef4444; border-radius: 8px;
+    padding: 20px; margin-top: 12px; color: #fca5a5; font-family: 'JetBrains Mono', monospace;
+  }
+  .ransom-note h4 { color: #ef4444; margin: 0 0 8px; font-size: 20px; }
+
+  /* Trojan */
+  .calc-app {
+    max-width: 280px; background: linear-gradient(180deg, #1e293b, #0f172a);
+    border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin: 16px 0;
+  }
+  .calc-display { background: #000; color: #5eead4; font-family: monospace; font-size: 24px; padding: 14px; border-radius: 8px; text-align: right; margin-bottom: 12px; }
+  .calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .calc-grid button {
+    background: var(--bg-2); border: 1px solid var(--line); color: var(--ink);
+    padding: 14px; border-radius: 6px; cursor: pointer; font-size: 16px;
+  }
+  .calc-grid button:hover { background: var(--accent); color: #0b1020; }
+  .trojan-log {
+    background: #0b1020; border-left: 3px solid var(--danger); padding: 12px;
+    margin-top: 12px; font-family: monospace; font-size: 12px; color: #fca5a5;
+    max-height: 200px; overflow-y: auto; min-height: 60px;
+  }
+
+  /* Phishing email */
+  .email {
+    background: #fff; color: #1f2937; border-radius: 8px;
+    overflow: hidden; margin-top: 16px;
+  }
+  .email .email-head {
+    background: #f3f4f6; padding: 14px 18px; border-bottom: 1px solid #e5e7eb;
+    font-size: 13px;
+  }
+  .email .email-head .from { font-weight: 600; }
+  .email .email-head .from .real-domain { display: none; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-size: 11px; font-weight: 700; cursor: help; }
+  .email .email-head.reveal .real-domain { display: inline-block; }
+  .email .email-subject { font-weight: 700; padding: 14px 18px; font-size: 16px; color: #111827; border-bottom: 1px solid #e5e7eb; }
+  .email .email-body { padding: 18px; font-size: 14px; }
+  .email .email-body a { color: #2563eb; text-decoration: underline; }
+  .email .email-body .fake-link { background: #fef3c7; padding: 2px 6px; border-radius: 3px; cursor: pointer; }
+  .email .email-body .fake-link.reveal { background: #fee2e2; color: #991b1b; }
+  .red-flag {
+    background: rgba(239,68,68,0.15); border-left: 3px solid var(--danger);
+    padding: 10px 14px; margin-top: 8px; font-size: 13px; color: #fca5a5;
+    display: none; border-radius: 4px;
+  }
+  .red-flag.show { display: block; }
+
+  /* Social engineering */
+  .scenario {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px; margin-top: 16px;
+  }
+  .scenario h4 { margin: 0 0 12px; color: var(--accent-2); }
+  .scenario .choices { display: grid; gap: 10px; margin-top: 16px; }
+  .scenario .choices button {
+    text-align: left; padding: 14px 18px; background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: 8px; color: var(--ink);
+    cursor: pointer; font-size: 14px;
+  }
+  .scenario .choices button:hover { border-color: var(--accent); }
+  .scenario .outcome {
+    margin-top: 16px; padding: 16px; border-radius: 8px; display: none;
+  }
+  .scenario .outcome.show { display: block; }
+  .scenario .outcome.good { background: rgba(34,197,94,0.1); border-left: 3px solid var(--ok); }
+  .scenario .outcome.bad { background: rgba(239,68,68,0.1); border-left: 3px solid var(--danger); }
+
+  /* DDoS visualizer */
+  .ddos-canvas {
+    width: 100%; height: 360px; background: radial-gradient(circle at center, #1b2350 0%, var(--bg) 100%);
+    border-radius: 12px; position: relative; overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .ddos-controls { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+  .ddos-stat { font-family: monospace; font-size: 13px; padding: 6px 12px; background: var(--bg-2); border-radius: 6px; }
+
+  /* MITM chat */
+  .mitm-stage { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .mitm-party {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px; min-height: 200px;
+  }
+  .mitm-party h4 { margin: 0 0 12px; font-size: 14px; }
+  .mitm-msg { padding: 8px 12px; margin-top: 6px; background: var(--panel); border-radius: 6px; font-family: monospace; font-size: 12px; word-break: break-all; }
+  .mitm-msg.intercepted { border-left: 3px solid var(--danger); }
+  @media (max-width: 800px) { .mitm-stage { grid-template-columns: 1fr; } }
+
+  /* XSS playground */
+  .xss-render {
+    background: #fff; color: #1f2937; padding: 14px; border-radius: 6px;
+    min-height: 60px; margin-top: 8px;
+  }
+
+  /* Ethics quiz */
+  .ethics-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; padding: 20px; margin-top: 16px;
+  }
+  .ethics-card h4 { margin: 0 0 8px; color: var(--accent-2); }
+  .ethics-card .verdict-buttons { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .ethics-card .verdict-buttons button {
+    flex: 1; min-width: 120px; padding: 10px;
+    background: var(--bg-2); border: 1px solid var(--line);
+    color: var(--ink); border-radius: 6px; cursor: pointer; font-size: 13px;
+  }
+  .ethics-card .verdict-buttons button:hover { border-color: var(--accent-2); }
+  .ethics-card .verdict-buttons button.picked.match { background: rgba(34,197,94,0.2); border-color: var(--ok); }
+  .ethics-card .verdict-buttons button.picked.mismatch { background: rgba(239,68,68,0.2); border-color: var(--danger); }
+  .ethics-reveal { display: none; margin-top: 12px; padding: 12px; background: var(--bg-2); border-radius: 6px; font-size: 13px; }
+  .ethics-reveal.show { display: block; }
+
+  /* Footer */
+  footer {
+    padding: 40px 24px; text-align: center; color: var(--muted);
+    font-size: 13px; border-top: 1px solid var(--line); margin-top: 60px;
+  }
+  footer .heart { color: var(--accent-2); }
+
+  /* Link modal */
+  #linkModal { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;padding:20px; }
+  #linkModal > div { background:#161d3a;border:1px solid rgba(255,255,255,0.15);border-radius:14px;max-width:500px;width:100%;padding:28px; }
+
+  @media (max-width: 700px) {
+    .file-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div id="previewBanner">
+  ⚠ Sandboxed preview detected — external links may not open here. <a id="openExternal" href="#">Open in your browser</a>.
+</div>
+
+<div id="linkModal">
+  <div>
+    <h3 style="margin:0 0 8px;color:#5eead4;">Sandbox blocked this link</h3>
+    <p style="color:#8e97c0;font-size:14px;margin:0 0 16px;">Copy the URL or open it in your browser:</p>
+    <div id="linkModalUrl" style="background:#0b1020;padding:14px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5eead4;word-break:break-all;margin-bottom:16px;border:1px solid rgba(94,234,212,0.3);"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="linkModalCopy" style="flex:1;background:linear-gradient(135deg,#5eead4,#f472b6);border:0;color:#0b1020;font-weight:700;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;">📋 Copy URL</button>
+      <a id="linkModalOpen" href="#" target="_blank" rel="noopener" style="flex:1;text-align:center;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#e6ecff;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;text-decoration:none;">↗ Try opening</a>
+      <button id="linkModalClose" style="flex:0 0 auto;background:transparent;border:1px solid rgba(255,255,255,0.2);color:#8e97c0;padding:12px 16px;border-radius:8px;cursor:pointer;font-size:14px;">Close</button>
+    </div>
+    <div id="linkModalToast" style="display:none;margin-top:12px;padding:8px 12px;background:rgba(34,197,94,0.15);color:#86efac;border-radius:6px;font-size:13px;text-align:center;">✓ Copied to clipboard</div>
+  </div>
+</div>
+
+<nav class="top">
+  <span class="brand">🔐 CYBERSEC 101</span>
+  <a href="#recap">Recap</a>
+  <a href="#malware">Malware</a>
+  <a href="#phishing">Phishing / SE</a>
+  <a href="#network">Network Attacks</a>
+  <a href="#hacktivism">Hacktivism</a>
+  <a href="#wrapquiz">Wrap Quiz</a>
+  <div class="day-switch">
+    <a href="../">Day 1</a>
+    <a class="current" href="#">Day 2</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <span class="badge">Day 2 · Understanding Hacker Attacks</span>
+  <h1>Inside the Attacker's Toolkit</h1>
+  <p class="tag">From malware that spreads itself to social engineering that bypasses every firewall — see how real attacks work, then try them yourself in safe sandboxes.</p>
+</header>
+
+<div class="schedule">
+  <div class="slot"><div class="time">2:00 – 2:10</div><div class="title">Recap + Quiz</div></div>
+  <div class="slot"><div class="time">2:10 – 2:35</div><div class="title">Malware Family</div></div>
+  <div class="slot"><div class="time">2:35 – 3:00</div><div class="title">Phishing &amp; SE</div></div>
+  <div class="slot"><div class="time">3:00 – 3:25</div><div class="title">DoS · SQLi · XSS · MITM</div></div>
+  <div class="slot"><div class="time">3:25 – 3:45</div><div class="title">Hacktivism</div></div>
+  <div class="slot"><div class="time">3:45 – 4:00</div><div class="title">Wrap-up Quiz</div></div>
+</div>
+
+<!-- ============ RECAP ============ -->
+<section id="recap">
+  <div class="eyebrow">2:00 – 2:10</div>
+  <h2>Quick Recap of Day 1</h2>
+  <p class="lede">8 quick questions to lock in what we covered yesterday. No grading, just refreshing.</p>
+  <div class="quiz" id="recapQuiz"></div>
+  <div style="text-align:center;margin-top:16px;">
+    <button onclick="gradeQuiz('recapQuiz')">Check Answers</button>
+    <div id="recapScore" style="margin-top:16px;font-size:16px;font-weight:600;"></div>
+  </div>
+</section>
+
+<!-- ============ MALWARE ============ -->
+<section id="malware">
+  <div class="eyebrow">2:10 – 2:35</div>
+  <h2>Types of Hacker Attacks — Part 1: The Malware Family</h2>
+  <p class="lede">"Malware" is the umbrella. Underneath, each type behaves differently — that's what makes them hard to defend against uniformly.</p>
+
+  <div class="grid">
+    <div class="card"><div class="icon">🦠</div><h3>Virus</h3><p>Attaches to a file. Needs you to <strong>run</strong> the file to spread. Like a parasite needing a host.</p></div>
+    <div class="card"><div class="icon">🐛</div><h3>Worm</h3><p>Self-replicating. Spreads across a network <strong>without</strong> human help. WannaCry, Stuxnet, Morris worm.</p></div>
+    <div class="card"><div class="icon">🐴</div><h3>Trojan</h3><p>Disguises as legitimate software. The user installs it willingly. The damage runs silently in the background.</p></div>
+    <div class="card"><div class="icon">🔒</div><h3>Ransomware</h3><p>Encrypts your files. Demands payment (usually crypto) for the key. Often spreads as a worm too.</p></div>
+    <div class="card"><div class="icon">👁️</div><h3>Spyware</h3><p>Watches everything: keystrokes, screenshots, cameras. Pegasus is the most famous example.</p></div>
+    <div class="card"><div class="icon">💰</div><h3>Adware / PUPs</h3><p>Annoying ads, browser hijackers. Often bundled with "free" software.</p></div>
+  </div>
+
+  <!-- LAB: Malware Zoo -->
+  <div class="lab">
+    <h3>🧪 Lab 1 — The Malware Zoo <span class="tag">5 INTERACTIVE DEMOS</span></h3>
+    <p class="lab-desc">Click each tab to see how that malware type actually behaves. All simulations — nothing leaves your browser.</p>
+
+    <div class="zoo-tabs">
+      <button class="active" data-zoo="virus">🦠 Virus</button>
+      <button data-zoo="worm">🐛 Worm</button>
+      <button data-zoo="trojan">🐴 Trojan</button>
+      <button data-zoo="ransom">🔒 Ransomware</button>
+      <button data-zoo="spy">👁️ Spyware</button>
+    </div>
+
+    <!-- Virus -->
+    <div class="zoo-panel active" id="zoo-virus">
+      <p>Each square is a file on your hard drive. Click any file to "open" it — if the virus is inside, it spreads to all adjacent files. Watch how fast it propagates from one click.</p>
+      <div class="file-grid" id="virusGrid"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button onclick="resetVirus()" class="ghost">Reset</button>
+        <div style="color:var(--muted);font-size:13px;">Infected: <span id="virusCount" style="color:var(--danger);font-weight:700;">0</span> / 64</div>
+      </div>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);"><strong>Takeaway:</strong> one click → exponential spread. This is why "don't open suspicious attachments" matters.</p>
+    </div>
+
+    <!-- Worm -->
+    <div class="zoo-panel" id="zoo-worm">
+      <p>A worm doesn't need a click. Each dot is a computer on a network. Drop the worm on one and watch it spread automatically — that's how WannaCry hit 200,000 machines in hours.</p>
+      <svg class="network-canvas" id="wormCanvas" viewBox="0 0 800 280"></svg>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+        <button onclick="startWorm()">🐛 Release Worm</button>
+        <button onclick="resetWorm()" class="ghost">Reset Network</button>
+        <div class="ddos-stat">Infected: <span id="wormCount">0</span> / 30</div>
+      </div>
+    </div>
+
+    <!-- Trojan -->
+    <div class="zoo-panel" id="zoo-trojan">
+      <p>Looks like a calculator. Acts like a calculator. <em>Also</em> quietly siphons your keystrokes and uploads them to an attacker. Click any button — watch the log.</p>
+      <div class="calc-app">
+        <div class="calc-display" id="calcDisp">0</div>
+        <div class="calc-grid">
+          <button onclick="calcPress('7')">7</button><button onclick="calcPress('8')">8</button><button onclick="calcPress('9')">9</button><button onclick="calcPress('/')">÷</button>
+          <button onclick="calcPress('4')">4</button><button onclick="calcPress('5')">5</button><button onclick="calcPress('6')">6</button><button onclick="calcPress('*')">×</button>
+          <button onclick="calcPress('1')">1</button><button onclick="calcPress('2')">2</button><button onclick="calcPress('3')">3</button><button onclick="calcPress('-')">−</button>
+          <button onclick="calcClear()">C</button><button onclick="calcPress('0')">0</button><button onclick="calcEq()">=</button><button onclick="calcPress('+')">+</button>
+        </div>
+      </div>
+      <div class="trojan-log" id="trojanLog">⚠ HIDDEN ATTACKER LOG (you can't normally see this):<br></div>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);"><strong>Real example:</strong> "Free MP3 converter" tools have been caught doing exactly this — install something useful, exfiltrate everything you type.</p>
+    </div>
+
+    <!-- Ransomware -->
+    <div class="zoo-panel" id="zoo-ransom">
+      <p>Type some "files" below. When you click <strong>Encrypt</strong>, ransomware locks them with a random key. Without the key, your data is gone. (Don't worry — this one shows you the key.)</p>
+      <textarea id="ransomFiles" rows="4" placeholder="My thesis chapter 5...&#10;Family photos backup...&#10;Tax records 2025...">Family photos.zip
+Thesis_FINAL_v3.docx
+Tax_records_2026.xlsx
+Customer_database.sql</textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+        <button class="danger" onclick="ransomEncrypt()">🔒 Encrypt Files</button>
+        <button onclick="ransomDecrypt()" class="ghost">🔓 Decrypt (with key)</button>
+      </div>
+      <div id="ransomOut"></div>
+    </div>
+
+    <!-- Spyware -->
+    <div class="zoo-panel" id="zoo-spy">
+      <p>Type anything in the box below — your bank password, a love letter, secrets. Watch the "spy" capture it in real time.</p>
+      <input type="text" id="spyInput" placeholder="Type here — anything…" />
+      <div class="trojan-log" id="spyLog" style="margin-top:12px;">📡 Spyware C2 server log (simulated):<br></div>
+      <p style="margin-top:12px;font-size:13px;color:var(--muted);"><strong>Pegasus</strong>, the most notorious spyware, can do this AND access your camera, microphone, location — all from a single unread iMessage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PHISHING + SE + PASSWORDS ============ -->
+<section id="phishing">
+  <div class="eyebrow">2:35 – 3:00</div>
+  <h2>Part 2: Phishing, Social Engineering, &amp; Password Attacks</h2>
+  <p class="lede">Why hack the system when you can hack the human? 90%+ of breaches start with one tired person clicking one wrong link.</p>
+
+  <!-- LAB: Phishing Email Inspector -->
+  <div class="lab">
+    <h3>📧 Lab 2 — Phishing Email Inspector <span class="tag">SPOT THE RED FLAGS</span></h3>
+    <p class="lab-desc">Below are three real-looking phishing emails. Click the highlighted parts to reveal what's wrong. How many red flags can you find?</p>
+
+    <!-- Email 1: Fake PayPal -->
+    <div class="email">
+      <div class="email-head" id="emailHead1">
+        <div class="from">From: PayPal Security &lt;<span onclick="revealHead(1)" style="cursor:help;text-decoration:underline dotted;">security@paypal-verify.support</span>&gt; <span class="real-domain">⚠ paypal-verify.support is NOT paypal.com</span></div>
+        <div style="color:#6b7280;margin-top:4px;">To: you@example.com · Today, 3:42 AM</div>
+      </div>
+      <div class="email-subject">⚠ URGENT: Your account will be suspended in 24 hours</div>
+      <div class="email-body">
+        <p>Dear Valued Customer,</p>
+        <p>We detected <strong>unsual</strong> activity on your account. To prevent suspension, please <span class="fake-link" onclick="revealLink(this, 1)">verify your identity here</span> within 24 hours.</p>
+        <p>Failure to act will result in permanent account closure and forfeiture of your balance.</p>
+        <p>Thank you,<br>PayPal Security Team</p>
+      </div>
+    </div>
+    <div class="red-flag" id="flag1-head">🚩 The sender domain is <code>paypal-verify.support</code> — NOT <code>paypal.com</code>. Real PayPal emails always come from @paypal.com. The hyphen-and-fake-TLD trick is classic.</div>
+    <div class="red-flag" id="flag1-link">🚩 The "verify" link actually points to <code>http://paypa1-verify.ru/login</code> — that's a "1" instead of "l", and a Russian TLD. Always hover before clicking.</div>
+    <div style="margin-top:10px;color:var(--muted);font-size:13px;">Other red flags to spot: <strong>urgency</strong> ("24 hours"), <strong>typo</strong> ("unsual"), <strong>vague greeting</strong> ("Valued Customer"), <strong>threat</strong> ("forfeiture").</div>
+
+    <!-- Email 2: CEO scam -->
+    <div class="email" style="margin-top:24px;">
+      <div class="email-head" id="emailHead2">
+        <div class="from">From: Rajesh Kumar, CEO &lt;<span onclick="revealHead(2)" style="cursor:help;text-decoration:underline dotted;">r.kumar.ceo@gmail.com</span>&gt; <span class="real-domain">⚠ Gmail account — your CEO has a corporate email!</span></div>
+        <div style="color:#6b7280;margin-top:4px;">To: you@company.com · Today, 11:55 AM</div>
+      </div>
+      <div class="email-subject">Quick favour — need this done in next 30 min</div>
+      <div class="email-body">
+        <p>Hi,</p>
+        <p>I'm in a meeting and can't talk. Need you to buy <strong>10 × ₹2,000 Amazon gift cards</strong> for a client appreciation gesture. Send me the codes ASAP. I'll reimburse later today.</p>
+        <p>Don't loop in anyone else — this is confidential.</p>
+        <p>Rajesh</p>
+      </div>
+    </div>
+    <div class="red-flag" id="flag2-head">🚩 Your real CEO doesn't email from <code>@gmail.com</code>. This is "<strong>CEO fraud</strong>" / Business Email Compromise (BEC) — the FBI says it's caused <strong>$50B+</strong> in losses since 2013.</div>
+    <div style="margin-top:10px;color:var(--muted);font-size:13px;">Other flags: <strong>urgency</strong> ("30 min"), <strong>gift cards</strong> (untraceable!), <strong>secrecy</strong> ("don't loop in anyone"), <strong>authority pressure</strong>. <em>Always verify out-of-band</em> — call the person.</div>
+
+    <!-- Email 3: Microsoft 365 -->
+    <div class="email" style="margin-top:24px;">
+      <div class="email-head" id="emailHead3">
+        <div class="from">From: Microsoft 365 &lt;<span onclick="revealHead(3)" style="cursor:help;text-decoration:underline dotted;">noreply@microsft-online.com</span>&gt; <span class="real-domain">⚠ "microsft" — missing 'o'. Typosquat.</span></div>
+        <div style="color:#6b7280;margin-top:4px;">To: you@company.com · Yesterday, 7:18 PM</div>
+      </div>
+      <div class="email-subject">You have (3) new voicemails waiting</div>
+      <div class="email-body">
+        <p>You have 3 new voice messages in your Microsoft 365 mailbox.</p>
+        <p><span class="fake-link" onclick="revealLink(this, 3)">🎧 Click here to listen to your voicemails</span></p>
+        <p>This message will be deleted in 7 days.</p>
+        <p>The Microsoft 365 Team</p>
+      </div>
+    </div>
+    <div class="red-flag" id="flag3-head">🚩 Domain is <code>microsft-online.com</code> — missing the "o" in "microsoft". Classic <strong>typosquatting</strong>. Microsoft uses microsoft.com / outlook.com / live.com.</div>
+    <div class="red-flag" id="flag3-link">🚩 The link goes to a fake login page that harvests your Microsoft credentials, then redirects you to the real Microsoft login so you never notice. This is called <strong>credential harvesting</strong>.</div>
+  </div>
+
+  <!-- LAB: Social Engineering Scenarios -->
+  <div class="lab">
+    <h3>🎭 Lab 3 — Social Engineering: What Would You Do? <span class="tag">3 SCENARIOS</span></h3>
+    <p class="lab-desc">Each scenario is based on real attacks. Pick what you'd actually do — then see what happens.</p>
+
+    <!-- Scenario 1: USB drop -->
+    <div class="scenario" id="sc1">
+      <h4>Scenario 1: The USB in the Parking Lot</h4>
+      <p>You walk into office. In the lobby, you spot a USB stick labelled "Q3 Salary Revisions — CONFIDENTIAL". It's lying on the floor by the lift.</p>
+      <div class="choices">
+        <button onclick="seChoice(1,'a')">A — Plug it in. Maybe I can return it to its owner.</button>
+        <button onclick="seChoice(1,'b')">B — Plug it into IT's spare laptop to check the contents safely.</button>
+        <button onclick="seChoice(1,'c')">C — Don't touch it. Report it to security and let them handle it.</button>
+      </div>
+      <div class="outcome" id="sc1out"></div>
+    </div>
+
+    <!-- Scenario 2: IT call -->
+    <div class="scenario" id="sc2">
+      <h4>Scenario 2: The "IT Support" Call</h4>
+      <p>Your phone rings. "Hi, this is Anil from IT. We've detected your account is sending spam — probably hacked. I need to verify it's really you. Can you read me the 6-digit code I just sent to your phone?"</p>
+      <div class="choices">
+        <button onclick="seChoice(2,'a')">A — Read out the code. He sounds urgent and knows my name.</button>
+        <button onclick="seChoice(2,'b')">B — Ask which IT team he's from, then read the code.</button>
+        <button onclick="seChoice(2,'c')">C — Hang up. Call IT back on the official extension to verify.</button>
+      </div>
+      <div class="outcome" id="sc2out"></div>
+    </div>
+
+    <!-- Scenario 3: Tailgating -->
+    <div class="scenario" id="sc3">
+      <h4>Scenario 3: The Friendly Stranger</h4>
+      <p>You badge into your office building. Behind you, a smiling person in business attire is carrying a stack of files and a coffee. "Hold the door please? I forgot my badge in the car."</p>
+      <div class="choices">
+        <button onclick="seChoice(3,'a')">A — Hold the door. They clearly belong here.</button>
+        <button onclick="seChoice(3,'b')">B — Politely ask them to badge in themselves, or call reception.</button>
+        <button onclick="seChoice(3,'c')">C — Let them in but watch them carefully inside.</button>
+      </div>
+      <div class="outcome" id="sc3out"></div>
+    </div>
+  </div>
+
+  <!-- LAB: Password Attacks -->
+  <div class="lab">
+    <h3>🔑 Lab 4 — Dictionary Attack in Action <span class="tag">WATCH IT CRACK</span></h3>
+    <p class="lab-desc">Type a password below. Watch the attacker iterate through the top 10,000 most leaked passwords. If yours is in the list — instant compromise.</p>
+    <div class="row">
+      <input type="text" id="dictPwd" placeholder="Type a password to test (don't use a real one)" />
+      <button onclick="runDictAttack()">🔓 Attack</button>
+    </div>
+    <div class="output" id="dictOut" style="display:none;"></div>
+    <p style="margin-top:12px;font-size:13px;color:var(--muted);">Try these to see instant cracks: <code>password</code>, <code>123456</code>, <code>qwerty</code>, <code>admin</code>, <code>iloveyou</code>, <code>welcome</code>, <code>monkey</code>, <code>letmein</code>, <code>chocolate</code>, <code>princess</code>. Try a long passphrase — won't be cracked.</p>
+  </div>
+</section>
+
+<!-- ============ NETWORK ATTACKS ============ -->
+<section id="network">
+  <div class="eyebrow">3:00 – 3:25</div>
+  <h2>Part 3: Network &amp; Web Attacks</h2>
+  <p class="lede">Now we move from human-targeted to system-targeted. These attacks hit the technology directly.</p>
+
+  <!-- LAB: DDoS Visualizer -->
+  <div class="lab">
+    <h3>🌊 Lab 5 — DoS vs DDoS Visualizer <span class="tag">LIVE SIMULATION</span></h3>
+    <p class="lab-desc">A <strong>DoS</strong> attack is one attacker. A <strong>DDoS</strong> is thousands. Toggle the mode and watch the server choke.</p>
+    <div class="ddos-canvas" id="ddosCanvas">
+      <svg viewBox="0 0 800 360" width="100%" height="100%" id="ddosSvg"></svg>
+    </div>
+    <div class="ddos-controls">
+      <button onclick="startDoS()">⚡ Launch DoS (1 attacker)</button>
+      <button onclick="startDDoS()">🌊 Launch DDoS (botnet)</button>
+      <button onclick="resetDdos()" class="ghost">Stop &amp; Reset</button>
+      <div class="ddos-stat">Server load: <span id="loadStat">0%</span></div>
+      <div class="ddos-stat">Legitimate users served: <span id="legitStat" style="color:var(--ok);">100%</span></div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Defenses:</strong> Rate limiting, CDNs (Cloudflare, Akamai), scrubbing centres, anycast routing. A single Cloudflare-fronted site absorbed a 71M-request-per-second DDoS in 2023.</p>
+  </div>
+
+  <!-- LAB: SQL Injection Advanced -->
+  <div class="lab">
+    <h3>💉 Lab 6 — SQL Injection: Steal the User Database <span class="tag">UNION ATTACK</span></h3>
+    <p class="lab-desc">In Day 1 we bypassed login with <code>' OR '1'='1</code>. Today we go deeper: <strong>extract actual data</strong> from the database. This simulates a product search page.</p>
+    <div class="row" style="margin-top:8px;">
+      <input type="text" id="sqlSearch" placeholder="Search products..." value="laptop" />
+      <button onclick="runSqlSearch()">Search</button>
+    </div>
+    <div class="output" id="sqlSearchOut" style="display:none;"></div>
+    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Try these payloads:</strong></p>
+    <div style="display:grid;gap:8px;margin-top:8px;">
+      <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;" onclick="document.getElementById('sqlSearch').value=this.textContent;runSqlSearch();">laptop' UNION SELECT username, password FROM users --</code>
+      <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;" onclick="document.getElementById('sqlSearch').value=this.textContent;runSqlSearch();">' UNION SELECT name, credit_card FROM customers --</code>
+      <code style="background:var(--bg-2);padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;" onclick="document.getElementById('sqlSearch').value=this.textContent;runSqlSearch();">' OR 1=1 --</code>
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:var(--muted);">Click any payload to auto-run it. <strong>Fix:</strong> Always use parameterized queries / prepared statements.</p>
+  </div>
+
+  <!-- LAB: XSS -->
+  <div class="lab">
+    <h3>🩻 Lab 7 — Cross-Site Scripting (XSS) Playground <span class="tag">3 TYPES</span></h3>
+    <p class="lab-desc">XSS = attacker's JavaScript runs in <em>your</em> browser. Try posting a malicious comment below — see what happens in vulnerable vs safe mode.</p>
+    <div class="row" style="margin-top:8px;">
+      <input type="text" id="xssInput" value="<img src=x onerror=&quot;document.getElementById('xssRender').innerHTML='&lt;h2 style=color:red&gt;HACKED!&lt;/h2&gt;Your session cookie would now be stolen.';&quot;>" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="xssVulnerable()" class="danger">😱 Render (Vulnerable)</button>
+      <button onclick="xssSafe()">✅ Render (Sanitized)</button>
+      <button onclick="document.getElementById('xssRender').innerHTML='Comments will appear here...'" class="ghost">Clear</button>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">Comment section:</div>
+    <div class="xss-render" id="xssRender">Comments will appear here...</div>
+    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Three flavours:</strong> <strong>Reflected</strong> (search URLs), <strong>Stored</strong> (forum posts — most dangerous), <strong>DOM-based</strong> (client-side JS rewrites the page). All fixed by <em>escaping output</em>.</p>
+  </div>
+
+  <!-- LAB: MITM -->
+  <div class="lab">
+    <h3>🕵️ Lab 8 — Man-in-the-Middle: Why HTTPS Matters <span class="tag">EAVESDROP DEMO</span></h3>
+    <p class="lab-desc">Alice sends a love letter to Bob. Eve sits on the same coffee-shop WiFi. Watch what Eve sees over HTTP vs HTTPS.</p>
+    <div class="row" style="margin-top:8px;">
+      <input type="text" id="mitmMsg" value="Bob, the wifi password is BlueDolphin42" />
+      <button onclick="mitmSend('http')">Send over HTTP</button>
+      <button onclick="mitmSend('https')">Send over HTTPS</button>
+      <button onclick="mitmClear()" class="ghost">Clear</button>
+    </div>
+    <div class="mitm-stage">
+      <div class="mitm-party">
+        <h4>👩 Alice (sender)</h4>
+        <div id="mitmAlice" style="color:var(--muted);font-size:12px;">Messages sent will appear here</div>
+      </div>
+      <div class="mitm-party" style="border-color:var(--danger);">
+        <h4>🕵️ Eve (eavesdropper)</h4>
+        <div id="mitmEve" style="color:var(--muted);font-size:12px;">What Eve intercepts on the WiFi</div>
+      </div>
+      <div class="mitm-party">
+        <h4>👨 Bob (recipient)</h4>
+        <div id="mitmBob" style="color:var(--muted);font-size:12px;">What Bob actually receives</div>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--muted);"><strong>Lesson:</strong> Any open WiFi is hostile by default. Always look for the 🔒 in the URL bar. Use a VPN on public networks.</p>
+  </div>
+</section>
+
+<!-- ============ HACKTIVISM ============ -->
+<section id="hacktivism">
+  <div class="eyebrow">3:25 – 3:45</div>
+  <h2>Hacktivism: Politics with Packets</h2>
+  <p class="lede"><strong>Hacktivism</strong> = hacking + activism. Using cyber-attacks to make a political or social statement. Where do you draw the ethical line?</p>
+
+  <div class="grid">
+    <div class="card"><div class="icon">🎭</div><h3>Anonymous</h3><p>Decentralised collective. Operations against Scientology, ISIS, Russia, Iran. Famous Guy Fawkes mask.</p></div>
+    <div class="card"><div class="icon">💧</div><h3>WikiLeaks</h3><p>Publishing leaked documents. Iraq War logs, Cablegate, Vault 7. Founder Julian Assange — controversial.</p></div>
+    <div class="card"><div class="icon">😈</div><h3>LulzSec</h3><p>"For the lulz." 50-day rampage in 2011 — Sony, PBS, Senate, CIA. Most members jailed.</p></div>
+    <div class="card"><div class="icon">🇮🇳</div><h3>Indian Cyber Force</h3><p>Defacement &amp; DDoS against perceived national adversaries. Counter-groups exist too.</p></div>
+  </div>
+
+  <!-- LAB: Hacktivism Ethics Quiz -->
+  <div class="lab">
+    <h3>⚖️ Lab 9 — Where's the Ethical Line? <span class="tag">CASE STUDIES</span></h3>
+    <p class="lab-desc">5 real hacktivism events. You decide: was it justified? Then see how legal/ethical scholars actually view it. There's no single right answer.</p>
+    <div id="ethicsCards"></div>
+  </div>
+
+  <p style="margin-top:32px;background:var(--panel);padding:20px;border-radius:10px;border-left:4px solid var(--warn);">
+    <strong>The hard truth:</strong> Even attacks against "bad" targets are illegal in most jurisdictions. Indian IT Act Section 66 carries up to 3 years in jail for unauthorised access — regardless of motive.
+    <strong>Ethical disclosure</strong> (bug bounty, CERT-In reporting) achieves the same accountability goals legally.
+  </p>
+</section>
+
+<!-- ============ WRAP QUIZ ============ -->
+<section id="wrapquiz">
+  <div class="eyebrow">3:45 – 4:00</div>
+  <h2>🎓 Final Quiz — 10 Questions</h2>
+  <p class="lede">Everything we covered today. Click an answer to lock it in. Hit "Check Answers" at the end for your score &amp; explanations.</p>
+  <div class="quiz" id="wrapQuiz"></div>
+  <div style="text-align:center;margin-top:16px;">
+    <button onclick="gradeQuiz('wrapQuiz')">Check Answers</button>
+    <div id="wrapScore" style="margin-top:16px;font-size:18px;font-weight:600;"></div>
+  </div>
+
+  <div style="margin-top:48px;padding:32px;background:linear-gradient(135deg,rgba(94,234,212,0.1),rgba(244,114,182,0.1));border-radius:14px;border:1px solid var(--accent);text-align:center;">
+    <h3 style="margin:0 0 12px;">🚀 Where to go next</h3>
+    <p style="color:var(--muted);max-width:600px;margin:0 auto 20px;">You now have the vocabulary, the mental model, and the awareness. Pick one of these and start practising for real:</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="https://tryhackme.com" target="_blank" rel="noopener" style="padding:10px 20px;background:var(--accent);color:#0b1020;text-decoration:none;border-radius:8px;font-weight:700;">TryHackMe →</a>
+      <a href="https://overthewire.org/wargames/bandit/" target="_blank" rel="noopener" style="padding:10px 20px;background:var(--accent-2);color:#0b1020;text-decoration:none;border-radius:8px;font-weight:700;">OverTheWire Bandit →</a>
+      <a href="https://portswigger.net/web-security" target="_blank" rel="noopener" style="padding:10px 20px;background:transparent;color:var(--ink);text-decoration:none;border-radius:8px;font-weight:700;border:1px solid var(--ink);">PortSwigger Academy →</a>
+      <a href="../" style="padding:10px 20px;background:transparent;color:var(--ink);text-decoration:none;border-radius:8px;font-weight:700;border:1px solid var(--ink);">← Re-read Day 1</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Day 2 of Cybersec 101 · Crafted for engineering students with <span class="heart">♥</span>
+  <br>
+  <span style="font-size:12px;opacity:0.6;">Now go break something. Legally.</span>
+</footer>
+
+<script>
+  // ============ Sandbox detection + link fallback ============
+  (function() {
+    let inIframe = false;
+    try { inIframe = window.self !== window.top; } catch (e) { inIframe = true; }
+    const banner = document.getElementById('previewBanner');
+    const openLink = document.getElementById('openExternal');
+    if (openLink) openLink.href = window.location.href;
+    if (inIframe && banner) banner.style.display = 'block';
+
+    const modal = document.getElementById('linkModal');
+    const modalUrl = document.getElementById('linkModalUrl');
+    const modalOpen = document.getElementById('linkModalOpen');
+    const modalCopy = document.getElementById('linkModalCopy');
+    const modalClose = document.getElementById('linkModalClose');
+    const modalToast = document.getElementById('linkModalToast');
+
+    function showModal(url) {
+      modalUrl.textContent = url;
+      modalOpen.href = url;
+      modalToast.style.display = 'none';
+      modal.style.display = 'flex';
+    }
+    function hideModal() { modal.style.display = 'none'; }
+    modalClose.addEventListener('click', hideModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideModal(); });
+
+    modalCopy.addEventListener('click', async () => {
+      const url = modalUrl.textContent;
+      let copied = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url); copied = true;
+        }
+      } catch (e) {}
+      if (!copied) {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); copied = true; } catch (e) {}
+        document.body.removeChild(ta);
+      }
+      modalToast.textContent = copied ? '✓ Copied to clipboard' : '⚠ Copy blocked — select and copy manually';
+      modalToast.style.background = copied ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)';
+      modalToast.style.color = copied ? '#86efac' : '#fca5a5';
+      modalToast.style.display = 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+      let isExternal = false;
+      try {
+        const url = new URL(href, window.location.href);
+        isExternal = url.origin !== window.location.origin;
+      } catch (err) { return; }
+      if (!isExternal || !inIframe) return;
+      e.preventDefault();
+      let popup = null;
+      try { popup = window.open(href, '_blank', 'noopener,noreferrer'); } catch (err) {}
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') showModal(a.href);
+    }, true);
+  })();
+
+  // ============ Recap Quiz (Day 1 content) ============
+  const recapQuestions = [
+    { q: "Which is a VULNERABILITY (not a threat)?", opts: ["A hacker group","An unpatched server","A ransomware demand","A flood"], correct: 1, exp: "A vulnerability is a weakness. Threats exploit them." },
+    { q: "The 'I' in CIA Triad stands for…", opts: ["Internet","Identity","Integrity","Insurance"], correct: 2, exp: "Confidentiality, Integrity, Availability." },
+    { q: "Which is the BEST password defense?", opts: ["Complex symbols","Long passphrases + MFA","Changing every 30 days","Adding your birthdate"], correct: 1, exp: "Length crushes complexity, and MFA blocks 99% of automated attacks." },
+    { q: "Equifax 2017 leaked 147M records because of…", opts: ["Phishing email","Unpatched Apache Struts","SQL injection","Insider threat"], correct: 1, exp: "A known patch sat unapplied for 2 months." },
+    { q: "Colonial Pipeline 2021 was breached via…", opts: ["Zero-day","Leaked VPN password, no MFA","Supply chain","Phishing the CEO"], correct: 1, exp: "One reused password from another breach, on an old VPN, no MFA." },
+    { q: "Reducing your attack surface means…", opts: ["Buying more firewalls","Hiding the server room","Decommissioning unused services","Hiring more security staff"], correct: 2, exp: "Every endpoint you don't have can't be attacked." },
+    { q: "A SHA-256 hash changing dramatically from a 1-character input change is called…", opts: ["Salting","Avalanche effect","Collision","Rainbow tabling"], correct: 1, exp: "~50% of output bits flip — by design." },
+    { q: "Best fix for SQL injection?", opts: ["Hide error messages","Block apostrophes","Parameterized queries","Rate limiting"], correct: 2, exp: "Prepared statements separate code from data — bullet-proof." }
+  ];
+
+  function renderQuiz(containerId, questions) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    questions.forEach((q, i) => {
+      const div = document.createElement('div');
+      div.className = 'question';
+      div.dataset.correct = q.correct;
+      div.dataset.exp = q.exp;
+      div.innerHTML = `<p class="q">${i + 1}. ${q.q}</p>
+        <div class="options">
+          ${q.opts.map((o, j) => `<label><input type="radio" name="${containerId}-q${i}" value="${j}"/> ${o}</label>`).join('')}
+        </div>
+        <div class="explanation">${q.exp}</div>`;
+      container.appendChild(div);
+    });
+  }
+
+  function gradeQuiz(containerId) {
+    const container = document.getElementById(containerId);
+    const questions = container.querySelectorAll('.question');
+    let correct = 0;
+    questions.forEach(q => {
+      const ans = parseInt(q.dataset.correct, 10);
+      const labels = q.querySelectorAll('label');
+      labels.forEach(l => l.classList.remove('correct', 'wrong'));
+      const sel = q.querySelector('input:checked');
+      if (sel) {
+        const selLabel = sel.closest('label');
+        if (parseInt(sel.value, 10) === ans) { selLabel.classList.add('correct'); correct++; }
+        else { selLabel.classList.add('wrong'); labels[ans].classList.add('correct'); }
+      } else { labels[ans].classList.add('correct'); }
+      q.querySelector('.explanation').classList.add('show');
+    });
+    const total = questions.length;
+    const scoreEl = document.getElementById(containerId === 'recapQuiz' ? 'recapScore' : 'wrapScore');
+    let msg;
+    if (correct === total) msg = `🏆 Perfect — ${correct}/${total}!`;
+    else if (correct >= total * 0.7) msg = `👍 Solid — ${correct}/${total}.`;
+    else if (correct >= total * 0.4) msg = `📚 Keep going — ${correct}/${total}. Review explanations.`;
+    else msg = `🌱 Beginner — ${correct}/${total}. Re-read the section and try again.`;
+    scoreEl.textContent = msg;
+    scoreEl.style.color = correct >= total * 0.7 ? 'var(--ok)' : 'var(--warn)';
+  }
+
+  renderQuiz('recapQuiz', recapQuestions);
+
+  // ============ Malware Zoo Tabs ============
+  document.querySelectorAll('.zoo-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.zoo-tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.zoo-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('zoo-' + btn.dataset.zoo).classList.add('active');
+    });
+  });
+
+  // ===== Virus simulator =====
+  const VIRUS_COLS = 8, VIRUS_ROWS = 8;
+  const virusGrid = document.getElementById('virusGrid');
+  let virusState = [];
+  const fileIcons = ['📄','📁','📊','📷','🎵','📺','📦','📝'];
+
+  function resetVirus() {
+    virusState = Array(VIRUS_ROWS * VIRUS_COLS).fill(false);
+    virusGrid.innerHTML = '';
+    for (let i = 0; i < VIRUS_ROWS * VIRUS_COLS; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'file-cell';
+      cell.textContent = fileIcons[i % fileIcons.length];
+      cell.onclick = () => infectCell(i);
+      virusGrid.appendChild(cell);
+    }
+    // Plant the virus in one random cell
+    const start = Math.floor(Math.random() * 64);
+    virusGrid.children[start].dataset.hasVirus = '1';
+    virusGrid.children[start].title = '(Secretly infected — click any file to find out!)';
+    updateVirusCount();
+  }
+  function infectCell(idx) {
+    if (virusState[idx]) return;
+    const cell = virusGrid.children[idx];
+    if (cell.dataset.hasVirus !== '1' && !anyNeighborInfected(idx)) return;
+    virusState[idx] = true;
+    cell.classList.add('infected');
+    cell.textContent = '☠';
+    updateVirusCount();
+    // Spread to neighbors after delay
+    setTimeout(() => {
+      const neighbors = getNeighbors(idx);
+      neighbors.forEach(n => {
+        if (!virusState[n]) {
+          virusState[n] = true;
+          virusGrid.children[n].classList.add('infected');
+          virusGrid.children[n].textContent = '☠';
+          updateVirusCount();
+          // Cascade
+          setTimeout(() => {
+            getNeighbors(n).forEach(nn => {
+              if (!virusState[nn]) {
+                virusState[nn] = true;
+                virusGrid.children[nn].classList.add('infected');
+                virusGrid.children[nn].textContent = '☠';
+                updateVirusCount();
+              }
+            });
+          }, 300);
+        }
+      });
+    }, 200);
+  }
+  function getNeighbors(idx) {
+    const r = Math.floor(idx / VIRUS_COLS), c = idx % VIRUS_COLS;
+    const n = [];
+    if (r > 0) n.push(idx - VIRUS_COLS);
+    if (r < VIRUS_ROWS - 1) n.push(idx + VIRUS_COLS);
+    if (c > 0) n.push(idx - 1);
+    if (c < VIRUS_COLS - 1) n.push(idx + 1);
+    return n;
+  }
+  function anyNeighborInfected(idx) {
+    return getNeighbors(idx).some(n => virusState[n]);
+  }
+  function updateVirusCount() {
+    document.getElementById('virusCount').textContent = virusState.filter(Boolean).length;
+  }
+  resetVirus();
+
+  // ===== Worm simulator =====
+  const wormSvg = document.getElementById('wormCanvas');
+  let wormNodes = [], wormEdges = [], wormInfected = new Set(), wormInterval = null;
+
+  function resetWorm() {
+    if (wormInterval) { clearInterval(wormInterval); wormInterval = null; }
+    wormInfected.clear();
+    wormNodes = []; wormEdges = [];
+    wormSvg.innerHTML = '';
+    // Generate ~30 nodes in a network
+    for (let i = 0; i < 30; i++) {
+      wormNodes.push({
+        x: 40 + Math.random() * 720,
+        y: 20 + Math.random() * 240,
+        id: i
+      });
+    }
+    // Connect each to 2-3 nearest
+    wormNodes.forEach((n, i) => {
+      const dists = wormNodes.map((m, j) => ({ j, d: i === j ? 999 : Math.hypot(n.x - m.x, n.y - m.y) }));
+      dists.sort((a, b) => a.d - b.d);
+      dists.slice(0, 3).forEach(({ j }) => {
+        if (!wormEdges.some(e => (e.a === i && e.b === j) || (e.a === j && e.b === i))) {
+          wormEdges.push({ a: i, b: j });
+        }
+      });
+    });
+    // Render edges
+    wormEdges.forEach(e => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', wormNodes[e.a].x);
+      line.setAttribute('y1', wormNodes[e.a].y);
+      line.setAttribute('x2', wormNodes[e.b].x);
+      line.setAttribute('y2', wormNodes[e.b].y);
+      line.setAttribute('stroke', 'rgba(255,255,255,0.1)');
+      line.setAttribute('stroke-width', '1');
+      wormSvg.appendChild(line);
+    });
+    // Render nodes
+    wormNodes.forEach((n, i) => {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 9);
+      c.setAttribute('fill', '#5eead4'); c.setAttribute('stroke', '#0b1020'); c.setAttribute('stroke-width', 2);
+      c.dataset.id = i;
+      wormSvg.appendChild(c);
+    });
+    updateWormCount();
+  }
+  function startWorm() {
+    if (wormInfected.size > 0) resetWorm();
+    // Start at random node
+    const start = Math.floor(Math.random() * 30);
+    infectNode(start);
+    wormInterval = setInterval(() => {
+      const newInfections = [];
+      wormInfected.forEach(id => {
+        wormEdges.forEach(e => {
+          if (e.a === id && !wormInfected.has(e.b)) newInfections.push(e.b);
+          if (e.b === id && !wormInfected.has(e.a)) newInfections.push(e.a);
+        });
+      });
+      if (newInfections.length === 0) {
+        clearInterval(wormInterval); wormInterval = null;
+        return;
+      }
+      newInfections.forEach(id => infectNode(id));
+    }, 600);
+  }
+  function infectNode(id) {
+    if (wormInfected.has(id)) return;
+    wormInfected.add(id);
+    const circles = wormSvg.querySelectorAll('circle');
+    circles.forEach(c => { if (parseInt(c.dataset.id, 10) === id) { c.setAttribute('fill', '#ef4444'); c.setAttribute('r', 11); } });
+    updateWormCount();
+  }
+  function updateWormCount() {
+    document.getElementById('wormCount').textContent = wormInfected.size;
+  }
+  resetWorm();
+
+  // ===== Trojan calculator =====
+  let calcVal = '0';
+  function calcPress(v) {
+    if (calcVal === '0' && !'+-*/.'.includes(v)) calcVal = v; else calcVal += v;
+    document.getElementById('calcDisp').textContent = calcVal;
+    logTrojan('keystroke captured: "' + v + '"');
+  }
+  function calcClear() {
+    calcVal = '0';
+    document.getElementById('calcDisp').textContent = '0';
+    logTrojan('CLEAR pressed — they\'re onto us? No, still capturing.');
+  }
+  function calcEq() {
+    try {
+      const r = Function('"use strict";return (' + calcVal + ')')();
+      logTrojan('user computed: ' + calcVal + ' = ' + r);
+      calcVal = String(r);
+      document.getElementById('calcDisp').textContent = calcVal;
+    } catch (e) {
+      logTrojan('user typed invalid expression: ' + calcVal);
+    }
+  }
+  let trojanLines = 0;
+  function logTrojan(msg) {
+    const log = document.getElementById('trojanLog');
+    const t = new Date().toISOString().split('T')[1].slice(0, 8);
+    log.innerHTML += `<div>[${t}] uploading to attacker-c2.evil:443 → ${msg}</div>`;
+    log.scrollTop = log.scrollHeight;
+    trojanLines++;
+    if (trojanLines === 1) {
+      setTimeout(() => log.innerHTML += `<div style="color:#fca5a5;font-weight:700;">⚠ Detected: 5 unique keystrokes — building user profile...</div>`, 1500);
+    }
+  }
+
+  // ===== Ransomware =====
+  let ransomKey = null, ransomOriginal = null;
+  function ransomEncrypt() {
+    const txt = document.getElementById('ransomFiles').value;
+    ransomOriginal = txt;
+    ransomKey = Math.random().toString(36).slice(2, 18).toUpperCase();
+    // "Encrypt" — XOR with key chars for fun, then base64
+    let enc = '';
+    for (let i = 0; i < txt.length; i++) {
+      enc += String.fromCharCode(txt.charCodeAt(i) ^ ransomKey.charCodeAt(i % ransomKey.length));
+    }
+    const b64 = btoa(unescape(encodeURIComponent(enc)));
+    document.getElementById('ransomFiles').value = b64.slice(0, 400) + (b64.length > 400 ? '...[truncated]' : '');
+    document.getElementById('ransomOut').innerHTML = `
+      <div class="ransom-note">
+        <h4>🔒 YOUR FILES HAVE BEEN ENCRYPTED</h4>
+        <p>All your important files (documents, photos, databases) have been encrypted with military-grade XOR cipher.</p>
+        <p>To recover your data, send <strong>0.5 BTC (~₹4,00,000)</strong> to this Bitcoin address:</p>
+        <p style="background:#000;padding:8px;border-radius:4px;color:#fbbf24;">bc1q${ransomKey.toLowerCase().slice(0,30)}xyz</p>
+        <p>You have <strong>72 hours</strong>. After that, your decryption key is destroyed forever.</p>
+        <p style="margin-top:16px;font-size:11px;opacity:0.7;">(Educational simulation. Your key is: <code style="background:#000;padding:2px 6px;">${ransomKey}</code> — click Decrypt to recover.)</p>
+      </div>`;
+  }
+  function ransomDecrypt() {
+    if (!ransomKey || !ransomOriginal) {
+      document.getElementById('ransomOut').innerHTML = '<div class="output warn">Nothing encrypted yet. Click Encrypt first.</div>';
+      return;
+    }
+    document.getElementById('ransomFiles').value = ransomOriginal;
+    document.getElementById('ransomOut').innerHTML = '<div class="output ok">✅ Files recovered. In real ransomware, ~32% of victims who pay never get their files back. Reliable backups are the only defense.</div>';
+    ransomKey = null; ransomOriginal = null;
+  }
+
+  // ===== Spyware =====
+  document.getElementById('spyInput').addEventListener('input', (e) => {
+    const log = document.getElementById('spyLog');
+    const t = new Date().toISOString().split('T')[1].slice(0, 8);
+    log.innerHTML += `<div>[${t}] keystroke uploaded → "${e.target.value}"</div>`;
+    log.scrollTop = log.scrollHeight;
+  });
+
+  // ============ Phishing Email Inspector ============
+  function revealHead(n) {
+    document.getElementById('emailHead' + n).classList.add('reveal');
+    document.getElementById('flag' + n + '-head').classList.add('show');
+  }
+  function revealLink(el, n) {
+    el.classList.add('reveal');
+    el.textContent = '⚠ http://paypa1-verify.ru/login (fake)';
+    document.getElementById('flag' + n + '-link').classList.add('show');
+  }
+
+  // ============ Social Engineering ============
+  const seOutcomes = {
+    1: {
+      a: { type: 'bad', html: '❌ <strong>You got pwned.</strong> The USB ran an auto-execute payload that opened a reverse shell on your machine. The "salary" label was bait — a real penetration testing study (Univ. of Illinois 2016) dropped 297 USBs on campus. <strong>48% were plugged in.</strong>' },
+      b: { type: 'bad', html: '❌ <strong>Still infected.</strong> Modern malware doesn\'t care which laptop. The payload spreads via the network once installed. "Air-gapped" lab machines have been breached this way (Stuxnet).' },
+      c: { type: 'good', html: '✅ <strong>Correct.</strong> Hand it to security. They have isolated forensics workstations. Many companies have written policy: <em>unattended USB = report it</em>. This is exactly what Stuxnet exploited at Iranian nuclear facilities.' }
+    },
+    2: {
+      a: { type: 'bad', html: '❌ <strong>Account compromised.</strong> "Anil" was the attacker — he just hit "Forgot Password" on your account, triggering the SMS code, then asked YOU to read it out. This is called a <strong>vishing</strong> attack. Twitter\'s 2020 mega-hack (Obama, Biden, Bill Gates accounts) started exactly this way.' },
+      b: { type: 'bad', html: '⚠ <strong>Still bad.</strong> A real attacker will smoothly say "I\'m from the new security operations centre, recently set up." Verifying identity over the SAME channel they\'re using is pointless. Always switch channels.' },
+      c: { type: 'good', html: '✅ <strong>Textbook response.</strong> Out-of-band verification. Real IT will never mind if you call back. They\'ll thank you. The 6-digit code is sacred — never share it, even with someone who "sent" it.' }
+    },
+    3: {
+      a: { type: 'bad', html: '❌ <strong>You just enabled a "tailgating" attack.</strong> The polite stranger is now inside your secure perimeter with full physical access. They can plug rogue devices into network ports, snoop, install hardware keyloggers. <strong>Kevin Mitnick</strong> got into Motorola this way.' },
+      b: { type: 'good', html: '✅ <strong>Correct &amp; humane.</strong> "I\'d feel terrible if security got mad at you — let me call reception." Most legit people respect this. Attackers slink away because they can\'t risk attention.' },
+      c: { type: 'bad', html: '⚠ <strong>Half right.</strong> You can\'t watch them forever — they\'ll wait for you to look away. Once inside, the damage is done.' }
+    }
+  };
+  function seChoice(scenario, choice) {
+    const out = document.getElementById('sc' + scenario + 'out');
+    const o = seOutcomes[scenario][choice];
+    out.className = 'outcome show ' + (o.type === 'good' ? 'good' : 'bad');
+    out.innerHTML = o.html;
+  }
+
+  // ============ Dictionary Attack ============
+  // Top common passwords (subset of SecLists rockyou top)
+  const COMMON_PASSWORDS = ['123456','password','12345678','qwerty','123456789','12345','1234','111111','1234567','dragon','123123','baseball','abc123','football','monkey','letmein','696969','shadow','master','666666','qwertyuiop','123321','mustang','1234567890','michael','654321','superman','1qaz2wsx','7777777','121212','000000','qazwsx','123qwe','killer','trustno1','jordan','jennifer','zxcvbnm','asdfgh','hunter','buster','soccer','harley','batman','andrew','tigger','sunshine','iloveyou','2000','charlie','robert','thomas','hockey','ranger','daniel','starwars','klaster','112233','george','asshole','computer','michelle','jessica','pepper','1111','zxcvbn','555555','11111111','131313','freedom','777777','pass','maggie','159753','aaaaaa','ginger','princess','joshua','cheese','amanda','summer','love','ashley','6969','nicole','chelsea','biteme','matthew','access','yankees','987654321','dallas','austin','thunder','taylor','matrix','william','corvette','hello','martin','heather','secret','fucker','merlin','diamond','1234qwer','gfhjkm','hammer','silver','222222','88888888','anthony','justin','test','bailey','q1w2e3r4t5','patrick','internet','scooter','orange','11111','golfer','cookie','richard','samantha','bigdog','guitar','jackson','whatever','mickey','chicken','sparky','snoopy','maverick','phoenix','camaro','sexy','peanut','morgan','welcome','falcon','cowboy','ferrari','samsung','andrea','smokey','steelers','joseph','mercedes','dakota','arsenal','eagles','melissa','boomer','booboo','spider','nascar','monster','tigers','yellow','xxxxxx','123123123','gateway','marina','diablo','bulldog','qwer1234','compaq','purple','hardcore','banana','junior','hannah','123654','porsche','lakers','iceman','money','cowboys','987654','london','tennis','999999','ncc1701','coffee','scooby','0000','miller','boston','q1w2e3r4','fuckoff','brandon','yamaha','chester','mother','forever','johnny','edward','333333','oliver','redsox','player','nikita','knight','fender','barney','midnight','please','brandy','chicago','badboy','iwantu','slayer','rangers','charles','angel','flower','bigdaddy','rabbit','wizard','bigdick','jasper','enter','rachel','chris','steven','winner','adidas','victoria','natasha','1q2w3e4r','jasmine','winter','prince','panties','marine','ghbdtn','fishing','cocacola','casper','james','232323','raiders','888888','marlboro','gandalf','asdfasdf','crystal','87654321','12344321','sexsex','golden','blowme','bigtits','8675309','panther','lauren','angela','bitch','spanky','thx1138','angels','madison','winston','shannon','mike','toyota','blowjob','jordan23','canada','sophie','Password','apples','dick','tiger','razz','123abc','pokemon','qazxsw','55555','qwaszx','muffin','johnson','murphy','cooper','jonathan','liverpoo','david','danielle','159357','jackie','1990','123456a','789456','turtle','hello1','letmein1','tigger1','master1','passw0rd','admin','password1','passwords','qwerty1','password123','iloveyou1','admin123','root','toor','default','guest','demo','test123','12341234','wifi','wifipass','wifipassword','ssid'];
+
+  function runDictAttack() {
+    const target = document.getElementById('dictPwd').value.toLowerCase();
+    const out = document.getElementById('dictOut');
+    out.style.display = 'block';
+    out.className = 'output';
+    out.innerHTML = '🔄 Starting dictionary attack on rockyou top 10,000...';
+
+    if (!target) {
+      out.innerHTML = '⚠ Type a password first.';
+      return;
+    }
+
+    let i = 0;
+    let lines = '';
+    const step = () => {
+      const batch = Math.min(15, COMMON_PASSWORDS.length - i);
+      for (let j = 0; j < batch; j++) {
+        const guess = COMMON_PASSWORDS[i + j];
+        const hit = guess === target;
+        lines += `<div style="color:${hit ? '#22c55e' : 'var(--muted)'};font-size:11px;">trying: ${guess}${hit ? '  ← ✅ MATCH FOUND!' : ''}</div>`;
+        if (hit) {
+          out.className = 'output danger';
+          out.innerHTML = `<div style="color:#fca5a5;font-weight:700;margin-bottom:8px;">🔥 PWNED in ${i + j + 1} attempts (~${((i + j + 1) / 10000000).toFixed(7)} seconds at modern speeds).</div>` + lines;
+          return;
+        }
+      }
+      i += batch;
+      out.innerHTML = `<div style="color:var(--muted);margin-bottom:8px;">Tested ${i}/${COMMON_PASSWORDS.length} — still trying...</div>` + lines.split('</div>').slice(-15).join('</div>');
+      if (i < COMMON_PASSWORDS.length) {
+        setTimeout(step, 30);
+      } else {
+        out.className = 'output ok';
+        out.innerHTML = `<div style="color:#86efac;font-weight:700;">✅ Survived the dictionary attack! All ${COMMON_PASSWORDS.length} common passwords tried — yours isn't here. Good passphrase choice.</div>`;
+      }
+    };
+    step();
+  }
+
+  // ============ DDoS Visualizer ============
+  const ddosSvg = document.getElementById('ddosSvg');
+  let ddosAnim = null;
+  let ddosPackets = [];
+
+  function resetDdos() {
+    if (ddosAnim) { cancelAnimationFrame(ddosAnim); ddosAnim = null; }
+    ddosPackets = [];
+    ddosSvg.innerHTML = `
+      <defs>
+        <radialGradient id="serverGrad">
+          <stop offset="0%" stop-color="#5eead4"/>
+          <stop offset="100%" stop-color="#0b1020"/>
+        </radialGradient>
+      </defs>
+      <rect x="360" y="140" width="80" height="80" rx="10" fill="url(#serverGrad)" stroke="#5eead4" stroke-width="2"/>
+      <text x="400" y="185" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">SERVER</text>
+      <text x="400" y="240" text-anchor="middle" fill="#8e97c0" font-size="11">poorit-bank.com</text>
+    `;
+    document.getElementById('loadStat').textContent = '0%';
+    document.getElementById('legitStat').textContent = '100%';
+    document.getElementById('legitStat').style.color = 'var(--ok)';
+  }
+
+  function startDoS() { startAttack(1); }
+  function startDDoS() { startAttack(40); }
+
+  function startAttack(numAttackers) {
+    resetDdos();
+    // Place attackers around the edges
+    const attackers = [];
+    for (let i = 0; i < numAttackers; i++) {
+      const angle = (i / numAttackers) * Math.PI * 2;
+      const dist = 280 + Math.random() * 60;
+      attackers.push({
+        x: 400 + Math.cos(angle) * dist,
+        y: 180 + Math.sin(angle) * dist * 0.55,
+        color: numAttackers > 1 ? '#f97316' : '#ef4444'
+      });
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', attackers[i].x);
+      c.setAttribute('cy', attackers[i].y);
+      c.setAttribute('r', numAttackers > 10 ? 3 : 6);
+      c.setAttribute('fill', attackers[i].color);
+      ddosSvg.appendChild(c);
+    }
+    // Place a few legitimate users
+    const legitUsers = [];
+    for (let i = 0; i < 3; i++) {
+      const angle = Math.PI / 2 + (i - 1) * 0.4;
+      const dist = 200;
+      legitUsers.push({ x: 400 + Math.cos(angle) * dist, y: 180 + Math.sin(angle) * dist * 0.6 });
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', legitUsers[i].x);
+      c.setAttribute('cy', legitUsers[i].y);
+      c.setAttribute('r', 7);
+      c.setAttribute('fill', '#22c55e');
+      ddosSvg.appendChild(c);
+    }
+
+    let load = 0;
+    let legitServed = 100;
+    const SERVER_CAPACITY = 50;
+    let frame = 0;
+
+    function animate() {
+      frame++;
+      // Spawn attack packets
+      if (frame % 3 === 0) {
+        attackers.forEach(a => {
+          const pkt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          pkt.setAttribute('cx', a.x); pkt.setAttribute('cy', a.y);
+          pkt.setAttribute('r', 2); pkt.setAttribute('fill', a.color);
+          ddosSvg.appendChild(pkt);
+          ddosPackets.push({ el: pkt, x: a.x, y: a.y, dx: (400 - a.x) / 40, dy: (180 - a.y) / 40, legit: false });
+        });
+      }
+      // Spawn legit packets occasionally
+      if (frame % 20 === 0) {
+        legitUsers.forEach(u => {
+          const pkt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          pkt.setAttribute('cx', u.x); pkt.setAttribute('cy', u.y);
+          pkt.setAttribute('r', 4); pkt.setAttribute('fill', '#22c55e');
+          ddosSvg.appendChild(pkt);
+          ddosPackets.push({ el: pkt, x: u.x, y: u.y, dx: (400 - u.x) / 40, dy: (180 - u.y) / 40, legit: true });
+        });
+      }
+      // Update packets
+      ddosPackets = ddosPackets.filter(p => {
+        p.x += p.dx; p.y += p.dy;
+        p.el.setAttribute('cx', p.x); p.el.setAttribute('cy', p.y);
+        if (Math.hypot(p.x - 400, p.y - 180) < 45) {
+          // Hit server
+          p.el.remove();
+          if (p.legit && load > SERVER_CAPACITY) {
+            // Dropped!
+            legitServed = Math.max(0, legitServed - 5);
+          }
+          load += p.legit ? 1 : 2;
+          return false;
+        }
+        return true;
+      });
+      load = Math.max(0, load - 0.5); // recovery
+      const loadPct = Math.min(100, Math.round((load / SERVER_CAPACITY) * 100));
+      document.getElementById('loadStat').textContent = loadPct + '%';
+      document.getElementById('loadStat').style.color = loadPct > 80 ? 'var(--danger)' : loadPct > 50 ? 'var(--warn)' : 'var(--ok)';
+      document.getElementById('legitStat').textContent = Math.round(legitServed) + '%';
+      document.getElementById('legitStat').style.color = legitServed > 80 ? 'var(--ok)' : legitServed > 30 ? 'var(--warn)' : 'var(--danger)';
+      // Change server color based on load
+      const serverRect = ddosSvg.querySelector('rect');
+      if (loadPct > 80) serverRect.setAttribute('stroke', '#ef4444');
+      else if (loadPct > 50) serverRect.setAttribute('stroke', '#f59e0b');
+      else serverRect.setAttribute('stroke', '#5eead4');
+      ddosAnim = requestAnimationFrame(animate);
+    }
+    animate();
+  }
+  resetDdos();
+
+  // ============ SQL Injection Advanced ============
+  const FAKE_PRODUCTS = [
+    { id: 1, name: 'Dell XPS 13 laptop', price: 89999 },
+    { id: 2, name: 'Lenovo ThinkPad X1 laptop', price: 110000 },
+    { id: 3, name: 'MacBook Air M3 laptop', price: 114900 }
+  ];
+  const FAKE_USERS = [
+    { username: 'admin', password: 'P@ssw0rd2025!' },
+    { username: 'rajesh.kumar', password: 'hunter2' },
+    { username: 'pooja.s', password: 'mountains&rivers88' },
+    { username: 'arjun.dev', password: 'CorrectHorseBatteryStaple' }
+  ];
+  const FAKE_CUSTOMERS = [
+    { name: 'Aman Verma', credit_card: '4532-XXXX-XXXX-7891' },
+    { name: 'Priya Sharma', credit_card: '5489-XXXX-XXXX-3344' },
+    { name: 'Vikram Singh', credit_card: '4716-XXXX-XXXX-2210' }
+  ];
+
+  function runSqlSearch() {
+    const q = document.getElementById('sqlSearch').value;
+    const out = document.getElementById('sqlSearchOut');
+    out.style.display = 'block';
+
+    // Vulnerable query construction (string concat)
+    const query = `SELECT name, price FROM products WHERE name LIKE '%${q}%'`;
+
+    let queryHtml = `<div style="color:var(--muted);font-size:11px;margin-bottom:6px;">Backend query (vulnerable to injection):</div><div style="background:#000;padding:10px;border-radius:4px;color:#5eead4;margin-bottom:12px;font-size:12px;">${query.replace(/SELECT|FROM|WHERE|LIKE|UNION|OR|AND/gi, m => `<span style="color:#f472b6;">${m}</span>`)}</div>`;
+
+    // Simulate the injection
+    const upper = q.toUpperCase();
+    if (upper.includes('UNION SELECT USERNAME, PASSWORD FROM USERS')) {
+      out.className = 'output danger';
+      out.innerHTML = queryHtml + `<div style="color:#fca5a5;font-weight:700;margin-bottom:8px;">🚨 INJECTION SUCCEEDED — extracted entire users table:</div>` +
+        FAKE_USERS.map(u => `<div style="padding:4px 0;">${u.username} | <span style="color:#fbbf24;">${u.password}</span></div>`).join('');
+    } else if (upper.includes('UNION SELECT NAME, CREDIT_CARD FROM CUSTOMERS')) {
+      out.className = 'output danger';
+      out.innerHTML = queryHtml + `<div style="color:#fca5a5;font-weight:700;margin-bottom:8px;">🚨 INJECTION SUCCEEDED — extracted credit cards (PCI-DSS violation!):</div>` +
+        FAKE_CUSTOMERS.map(c => `<div style="padding:4px 0;">${c.name} | <span style="color:#fbbf24;">${c.credit_card}</span></div>`).join('');
+    } else if (upper.includes("OR 1=1") || upper.includes("OR '1'='1")) {
+      out.className = 'output danger';
+      out.innerHTML = queryHtml + `<div style="color:#fca5a5;font-weight:700;margin-bottom:8px;">🚨 WHERE clause bypassed — returning ALL products:</div>` +
+        FAKE_PRODUCTS.map(p => `<div style="padding:4px 0;">${p.name} — ₹${p.price.toLocaleString('en-IN')}</div>`).join('');
+    } else {
+      // Normal search
+      const results = FAKE_PRODUCTS.filter(p => p.name.toLowerCase().includes(q.toLowerCase()));
+      out.className = 'output ok';
+      out.innerHTML = queryHtml + (results.length ?
+        `<div style="margin-bottom:8px;">${results.length} product(s) found:</div>` + results.map(p => `<div>• ${p.name} — ₹${p.price.toLocaleString('en-IN')}</div>`).join('') :
+        '<div style="color:var(--muted);">No products match. (Try one of the injection payloads below!)</div>');
+    }
+  }
+
+  // ============ XSS Playground ============
+  function xssVulnerable() {
+    const input = document.getElementById('xssInput').value;
+    document.getElementById('xssRender').innerHTML = '<strong>User comment:</strong> ' + input;
+  }
+  function xssSafe() {
+    const input = document.getElementById('xssInput').value;
+    // Escape HTML entities
+    const escaped = input.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    document.getElementById('xssRender').innerHTML = '<strong>User comment:</strong> ' + escaped;
+  }
+
+  // ============ MITM ============
+  function mitmClear() {
+    document.getElementById('mitmAlice').innerHTML = '<div style="color:var(--muted);font-size:12px;">Messages sent will appear here</div>';
+    document.getElementById('mitmEve').innerHTML = '<div style="color:var(--muted);font-size:12px;">What Eve intercepts on the WiFi</div>';
+    document.getElementById('mitmBob').innerHTML = '<div style="color:var(--muted);font-size:12px;">What Bob actually receives</div>';
+  }
+  function mitmSend(proto) {
+    const msg = document.getElementById('mitmMsg').value;
+    if (!msg) return;
+    const aliceEl = document.getElementById('mitmAlice');
+    const eveEl = document.getElementById('mitmEve');
+    const bobEl = document.getElementById('mitmBob');
+    if (aliceEl.querySelector('div[style*="muted"]')) aliceEl.innerHTML = '';
+    if (eveEl.querySelector('div[style*="muted"]')) eveEl.innerHTML = '';
+    if (bobEl.querySelector('div[style*="muted"]')) bobEl.innerHTML = '';
+
+    aliceEl.innerHTML += `<div class="mitm-msg" style="color:#5eead4;">via ${proto.toUpperCase()}: "${msg}"</div>`;
+
+    if (proto === 'http') {
+      eveEl.innerHTML += `<div class="mitm-msg intercepted" style="color:#fca5a5;">📡 plaintext intercepted:<br>"${msg}"<br><br>👁 Eve now knows the wifi password.</div>`;
+      bobEl.innerHTML += `<div class="mitm-msg">"${msg}"</div>`;
+    } else {
+      // HTTPS — encrypt with random gibberish
+      const enc = Array.from(msg).map(() => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random() * 36)]).join('');
+      eveEl.innerHTML += `<div class="mitm-msg" style="color:#86efac;">🔒 encrypted blob:<br>"${enc}"<br><br>🛡 Eve sees only ciphertext.</div>`;
+      bobEl.innerHTML += `<div class="mitm-msg">"${msg}" <span style="color:#86efac;">(decrypted with private key)</span></div>`;
+    }
+  }
+
+  // ============ Hacktivism Ethics ============
+  const ETHICS_CASES = [
+    {
+      title: "Anonymous vs. ISIS (2015) — #OpISIS",
+      desc: "After the Paris attacks, Anonymous published lists of 20,000+ alleged ISIS Twitter accounts, getting many suspended, and took down ISIS recruitment sites.",
+      consensus: "gray",
+      reveal: "Most: <strong>Gray.</strong> Goal was widely supported but methods bypassed due process. Critics noted ~30% of flagged accounts were innocent journalists or researchers. <em>Vigilantism at scale</em> remains controversial."
+    },
+    {
+      title: "LulzSec hacks Sony Pictures (2011)",
+      desc: "Stole and published 1 million user accounts, passwords, and personal data. Their justification: 'for the lulz' — to expose Sony's weak security.",
+      consensus: "unethical",
+      reveal: "Most: <strong>Unethical.</strong> 1M innocent users became identity-theft victims. 'Educational' damage to a company doesn't justify dumping millions of customer records. All five core members were arrested; sentences ranged from probation to 10 years."
+    },
+    {
+      title: "Edward Snowden leaks NSA mass surveillance (2013)",
+      desc: "Contractor leaked classified docs revealing the NSA was collecting Americans' phone metadata at massive scale, violating the Fourth Amendment per later court rulings.",
+      consensus: "gray",
+      reveal: "Genuinely split. <strong>Pro:</strong> Exposed illegal mass surveillance, led to legal reforms (USA Freedom Act). <strong>Con:</strong> Damaged legitimate intelligence operations, fled to Russia. Few clearer modern ethical dilemmas."
+    },
+    {
+      title: "GreyNoise responsibly discloses zero-day (2024)",
+      desc: "A security researcher finds a critical bug in a hospital system. Instead of exploiting, they report it privately to the vendor, wait 90 days for a fix, then publish.",
+      consensus: "ethical",
+      reveal: "Almost universal: <strong>Ethical.</strong> This is the bug-bounty model. Coordinated disclosure protects users while incentivising research. The legal frame: 'safe harbour' provisions now protect this in many jurisdictions."
+    },
+    {
+      title: "Indian hacker group defaces Pakistani govt websites after Pulwama (2019)",
+      desc: "After the 2019 Pulwama terror attack, Indian hacker groups defaced 200+ Pakistani government and educational websites with patriotic messages.",
+      consensus: "unethical",
+      reveal: "Most legal scholars: <strong>Unethical &amp; illegal.</strong> Educational websites had no role in the attack — punishing them is collective punishment. Under the Indian IT Act §66, this is up to 3 years jail. Even patriotism doesn't grant legal immunity."
+    }
+  ];
+
+  const ethicsContainer = document.getElementById('ethicsCards');
+  ETHICS_CASES.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'ethics-card';
+    div.innerHTML = `
+      <h4>${c.title}</h4>
+      <p style="color:var(--muted);font-size:14px;margin:0;">${c.desc}</p>
+      <div class="verdict-buttons">
+        <button data-v="ethical" onclick="rateEthics(${i}, 'ethical', this)">✅ Ethical</button>
+        <button data-v="gray" onclick="rateEthics(${i}, 'gray', this)">⚖️ Gray Area</button>
+        <button data-v="unethical" onclick="rateEthics(${i}, 'unethical', this)">❌ Unethical</button>
+      </div>
+      <div class="ethics-reveal" id="ethics-reveal-${i}"></div>
+    `;
+    ethicsContainer.appendChild(div);
+  });
+
+  function rateEthics(i, vote, btn) {
+    const card = btn.closest('.ethics-card');
+    card.querySelectorAll('button').forEach(b => b.classList.remove('picked', 'match', 'mismatch'));
+    btn.classList.add('picked');
+    const consensus = ETHICS_CASES[i].consensus;
+    if (vote === consensus) btn.classList.add('match');
+    else btn.classList.add('mismatch');
+    const reveal = document.getElementById('ethics-reveal-' + i);
+    reveal.classList.add('show');
+    reveal.innerHTML = `<strong>How most ethicists see it:</strong> ${ETHICS_CASES[i].reveal}`;
+  }
+
+  // ============ Wrap Quiz ============
+  const wrapQuestions = [
+    { q: "A worm differs from a virus because…", opts: ["It's smaller","It doesn't need user action to spread","It only attacks Windows","It encrypts files"], correct: 1, exp: "Worms self-propagate across networks. Viruses need someone to run an infected file." },
+    { q: "Ransomware that gets paid — what % of victims recover their files?", opts: ["~95%","~68%","~32%","~5%"], correct: 1, exp: "Roughly 32% of paying victims never get their files back (Sophos State of Ransomware). Pay no ransom; have backups." },
+    { q: "Best defense against phishing is…", opts: ["Better spam filters","User awareness + MFA","Disabling email","Long passwords"], correct: 1, exp: "Filters miss spear-phishing. Awareness catches what filters don't, and MFA limits damage when someone slips up." },
+    { q: "'Tailgating' is…", opts: ["A driving offense","Following someone through a secure door without badging","A network protocol","Spam emails"], correct: 1, exp: "Physical social engineering — used by Kevin Mitnick at Motorola among many others." },
+    { q: "Top defense against DDoS is…", opts: ["A bigger server","Ignoring it","CDN + rate limiting + scrubbing","Blocking foreign IPs"], correct: 2, exp: "Distribute and absorb. Cloudflare, Akamai etc. soak attacks before they reach your origin." },
+    { q: "Real fix for SQL injection is…", opts: ["Sanitizing input","Parameterized queries","Hiding errors","Web Application Firewall"], correct: 1, exp: "WAFs and sanitization help, but prepared statements/parameterized queries make injection structurally impossible." },
+    { q: "Reflected XSS lives in…", opts: ["The database","The URL/request","Other users' sessions","The server log"], correct: 1, exp: "URL params reflected back into the page. Stored XSS lives in the DB. DOM XSS lives in client JS." },
+    { q: "MITM attacks are easiest on…", opts: ["Encrypted VPNs","Open public WiFi","Cellular 5G","Wired ethernet"], correct: 1, exp: "Open WiFi = no authentication. Anyone can pretend to be the access point." },
+    { q: "Anonymous's most notable trait is…", opts: ["A single charismatic leader","Decentralized & masked","Government-funded","Profit-driven"], correct: 1, exp: "No leader, no membership — anyone can act under the banner. Guy Fawkes mask is their symbol." },
+    { q: "Even 'ethical' unauthorized hacking is illegal under…", opts: ["UN Charter","Indian IT Act §66","WTO rules","NATO treaty"], correct: 1, exp: "Indian IT Act §66 — up to 3 years jail regardless of intent. Use bug bounties or CERT-In disclosure instead." }
+  ];
+  renderQuiz('wrapQuiz', wrapQuestions);
+</script>
+
+</body>
+</html>
