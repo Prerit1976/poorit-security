@@ -223,6 +223,70 @@
 </head>
 <body>
 
+<!-- ============ LinkedIn Follow Gate ============ -->
+<div id="followGate" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(11,16,32,0.97);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;overflow:auto;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="background:linear-gradient(135deg,#161d3a,#11172e);border:1px solid rgba(94,234,212,0.3);border-radius:16px;max-width:520px;width:100%;padding:36px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.6);color:#e6ecff;">
+    <div style="font-size:48px;margin-bottom:8px;">🔐</div>
+    <h2 style="margin:0 0 8px;font-size:28px;background:linear-gradient(90deg,#5eead4,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent;">Almost there!</h2>
+    <p style="color:#8e97c0;font-size:15px;margin:0 0 24px;line-height:1.6;">Before we let you in, please follow us on LinkedIn — it's how we stay connected with the community we build for. Two quick clicks.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <a id="gateLink1" href="https://www.linkedin.com/company/poorit-technologies/" target="_blank" rel="noopener" onclick="gateClick(1)" style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:#0a66c2;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;transition:transform 0.15s;">
+        <span style="font-size:18px;font-weight:900;background:#fff;color:#0a66c2;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">in</span>
+        <span style="flex:1;text-align:left;">Follow <strong>Poorit Technologies</strong></span>
+        <span id="gateCheck1" style="opacity:0;transition:opacity 0.2s;font-size:18px;">✓</span>
+      </a>
+      <a id="gateLink2" href="https://www.linkedin.com/in/preritchandra/" target="_blank" rel="noopener" onclick="gateClick(2)" style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:#0a66c2;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;transition:transform 0.15s;">
+        <span style="font-size:18px;font-weight:900;background:#fff;color:#0a66c2;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;">in</span>
+        <span style="flex:1;text-align:left;">Follow <strong>Prerit Chandra</strong></span>
+        <span id="gateCheck2" style="opacity:0;transition:opacity 0.2s;font-size:18px;">✓</span>
+      </a>
+    </div>
+
+    <button id="gateContinue" onclick="gateContinue()" disabled style="width:100%;padding:14px;background:linear-gradient(135deg,#5eead4,#f472b6);border:0;color:#0b1020;font-weight:700;font-size:15px;border-radius:8px;cursor:not-allowed;opacity:0.4;transition:all 0.2s;">
+      Click both LinkedIn buttons above first
+    </button>
+
+    <p style="color:#666;font-size:11px;margin-top:14px;line-height:1.5;">By continuing you confirm you've followed both accounts. Thanks for supporting the work! 🙌</p>
+  </div>
+</div>
+
+<script>
+  (function() {
+    if (new URLSearchParams(location.search).get('bypass') === '1') {
+      localStorage.setItem('poorit_lk_unlocked_v1', '1');
+    }
+    const STORAGE_KEY = 'poorit_lk_unlocked_v1';
+    if (localStorage.getItem(STORAGE_KEY) === '1') return;
+
+    const gate = document.getElementById('followGate');
+    gate.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    let clicked1 = false, clicked2 = false;
+    window.gateClick = function(n) {
+      if (n === 1 && !clicked1) { clicked1 = true; document.getElementById('gateCheck1').style.opacity = '1'; }
+      if (n === 2 && !clicked2) { clicked2 = true; document.getElementById('gateCheck2').style.opacity = '1'; }
+      const btn = document.getElementById('gateContinue');
+      if (clicked1 && clicked2) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.textContent = '✓ Continue to the content';
+      } else {
+        btn.textContent = `Now click ${!clicked1 ? 'Poorit Technologies' : 'Prerit Chandra'}`;
+      }
+    };
+    window.gateContinue = function() {
+      if (!clicked1 || !clicked2) return;
+      localStorage.setItem(STORAGE_KEY, '1');
+      try { localStorage.setItem('poorit_lk_unlocked_at', new Date().toISOString()); } catch(e){}
+      gate.style.display = 'none';
+      document.body.style.overflow = '';
+    };
+  })();
+</script>
+
 <div id="previewBanner">
   ⚠ Sandboxed preview detected — external links may not open here. <a id="openExternal" href="#">Open in your browser</a>.
 </div>
